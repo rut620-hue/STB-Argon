@@ -15,9 +15,9 @@
   - [x] พัฒนาและ Deploy `gas/รหัส.js` & `gas/appsscript.json` (`clasp push` & `clasp deploy @1`)
   - [x] สร้าง `shared/stb-loader.js`, `shared/stb-sso-guard.js`, `shared/stb-drive-upload.js`
   - [x] สร้าง `assets/css/portal.css` (ฟอนต์หลัก `Sarabun` จาก Google Fonts + Light/Dark Mode)
-- [ ] **🟡 เฟส 1C: หน้าเว็บ Central Portal SPA (ส่วนที่ 1: โครงสร้างหลัก, First-Time Setup Bypass, Auth, Dashboard & Profile)** *(เฟสถัดไป)*
-  - [ ] สร้าง `index.html`, `assets/js/portal-config.js`, `assets/js/portal-api.js`
-  - [ ] สร้าง `assets/js/portal-app.js` (ส่วนที่ 1: Login/Setup Bypass, Register 3 ขั้นตอน, Dashboard การ์ดแอป SSO, Profile & วาดลายเซ็น)
-- [ ] **🟣 เฟส 1D: หน้าเว็บ Central Portal SPA (ส่วนที่ 2: ระบบจัดการ Admin/Superadmin & แอปย่อยตัวอย่าง)**
+- [x] **🟡 เฟส 1C: หน้าเว็บ Central Portal SPA (ส่วนที่ 1: โครงสร้างหลัก, First-Time Setup Bypass, Auth, Dashboard & Profile)** *(เสร็จสมบูรณ์ 100%)*
+  - [x] สร้าง `index.html`, `assets/js/portal-config.js`, `assets/js/portal-api.js`
+  - [x] สร้าง `assets/js/portal-app.js` (ส่วนที่ 1: Login/Setup Bypass, Register 3 ขั้นตอน, Dashboard การ์ดแอป SSO, Profile & วาดลายเซ็น)
+- [ ] **🟣 เฟส 1D: หน้าเว็บ Central Portal SPA (ส่วนที่ 2: ระบบจัดการ Admin/Superadmin & แอปย่อยตัวอย่าง)** *(เฟสถัดไป)*
   - [ ] เพิ่มโมดูล `#personnel`, `#users`, `#webapps`, `#reference`, `#positions` (Batch Add & เลื่อนลำดับ `▲▼`), `#settings` (พร้อมปุ่ม `รีเซ็ตข้อมูลทดสอบ`)
   - [ ] สร้าง `apps/sample-subapp/index.html` ทดสอบ SSO ครบวงจร และ Push ขึ้น GitHub Pages
