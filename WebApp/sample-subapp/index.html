@@ -5,10 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ระบบตัวอย่างทดสอบ SSO (Sample Sub-App) — สตบ.สนท.</title>
 
-  <!-- Google Fonts & Font Awesome Icons -->
+  <!-- Google Fonts Sarabun -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Tailwind & Lucide & Font Awesome Icons -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
   <!-- SweetAlert2 -->
@@ -20,13 +24,13 @@
 
   <style>
     .subapp-header {
-      background: linear-gradient(120deg, var(--sb1), var(--sb2) 60%, var(--sb3));
+      background: linear-gradient(120deg, var(--hd1), var(--hd2) 60%, var(--hd3));
       color: #ffffff;
-      padding: 1rem 1.5rem;
+      padding: 0.85rem 1.5rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      box-shadow: var(--shadow-md);
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.22);
       position: sticky;
       top: 0;
       z-index: 100;
@@ -79,26 +83,26 @@
     }
   </style>
 </head>
-<body>
+<body class="app-bg text-slate-800">
 
   <!-- Sub-App Header Bar -->
   <header class="subapp-header">
     <div style="display:flex;align-items:center;gap:1rem;">
-      <img src="https://pr-bangkok.com/wp-content/uploads/2025/06/231116_BMA-Emblem_Edited_Green-600x600.png" alt="BMA Emblem" style="width:42px;height:42px;background:rgba(255,255,255,0.12);padding:3px;border-radius:0.5rem;object-fit:contain;">
+      <img src="https://pr-bangkok.com/wp-content/uploads/2025/06/231116_BMA-Emblem_Edited_Green-600x600.png" alt="BMA Emblem" style="width:42px;height:42px;background:rgba(255,255,255,0.15);padding:3px;border-radius:0.75rem;object-fit:contain;">
       <div>
         <div style="font-weight:800;font-size:1.1rem;display:flex;align-items:center;gap:0.6rem;">
           ระบบตัวอย่างทดสอบ SSO (Sample Sub-App)
-          <span class="chip" style="background:rgba(255,255,255,0.2);color:#fff;font-size:0.75rem;">APP0001</span>
+          <span class="badge bg-white/20 text-white text-[11px]">APP0001</span>
         </div>
         <div style="font-size:0.82rem;color:rgba(255,255,255,0.85);">ส่วนตรวจและบังคับการ สำนักเทศกิจ กรุงเทพมหานคร</div>
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:0.75rem;">
-      <a href="../Portal-SSO/index.html" class="btn btn-outline" style="color:#ffffff;border-color:rgba(255,255,255,0.3);background:rgba(255,255,255,0.1);">
-        <i class="fa-solid fa-house"></i> กลับสู่ Central Portal
+      <a href="../Portal-SSO/index.html" class="btn-ghost !py-1.5 !px-3 !text-xs !bg-white/15 !text-white !border-white/25 hover:!bg-white/25">
+        <i data-lucide="home" class="w-3.5 h-3.5"></i> กลับสู่ Central Portal
       </a>
-      <button type="button" class="btn btn-danger btn-sm" onclick="handleSubAppLogout()">
-        <i class="fa-solid fa-arrow-right-from-bracket"></i> ออกจากระบบ
+      <button type="button" class="btn-danger !py-1.5 !px-3 !text-xs" onclick="handleSubAppLogout()">
+        <i data-lucide="log-out" class="w-3.5 h-3.5"></i> ออกจากระบบ
       </button>
     </div>
   </header>
@@ -106,40 +110,42 @@
   <main class="subapp-container">
 
     <!-- Hero Card: ข้อมูลผู้ใช้งานที่ผ่านการรับรองจาก SSO -->
-    <div class="card" style="border-left:5px solid var(--g1);">
+    <div class="card p-5" style="border-left:5px solid var(--g1);">
       <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:1rem;">
         <div style="display:flex;align-items:center;gap:1.25rem;">
-          <img id="userAvatarImg" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="User Avatar" style="width:68px;height:68px;border-radius:50%;object-fit:cover;border:2px solid var(--border);box-shadow:var(--shadow-sm);">
+          <img id="userAvatarImg" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="User Avatar" class="w-16 h-16 rounded-full object-cover border-2 border-slate-200 dark:border-slate-700 shadow-sm bg-white">
           <div>
             <div style="font-size:1.25rem;font-weight:800;color:var(--text);" id="userFullName">กำลังตรวจสอบสิทธิ์ SSO...</div>
             <div style="font-size:0.9rem;color:var(--muted);margin-top:0.15rem;" id="userPosAndDept">กรุณารอสักครู่...</div>
             <div style="display:flex;gap:0.5rem;margin-top:0.4rem;" id="userBadges">
-              <span class="chip" id="userRoleChip">ROLE</span>
-              <span class="chip green" id="userAccessLevelChip">ACCESS: ...</span>
+              <span class="badge chip" id="userRoleChip">ROLE</span>
+              <span class="badge soft" id="userAccessLevelChip">ACCESS: ...</span>
             </div>
           </div>
         </div>
         <div style="text-align:right;">
           <div style="font-size:0.8rem;color:var(--muted);">สถานะการตรวจสอบความปลอดภัย</div>
-          <div style="font-size:1.05rem;font-weight:800;color:var(--g1);"><i class="fa-solid fa-circle-check"></i> SSO Authenticated</div>
+          <div style="font-size:1.05rem;font-weight:800;color:var(--g1);display:flex;align-items:center;justify-content:flex-end;gap:0.4rem;">
+            <i data-lucide="shield-check" class="w-5 h-5"></i> SSO Authenticated
+          </div>
           <div style="font-size:0.78rem;color:var(--muted);margin-top:0.2rem;" id="ssoTimestamp"></div>
         </div>
       </div>
     </div>
 
     <!-- Section 1: ข้อมูลผู้ใช้งาน 38 ฟิลด์ (SSO Payload Fields) -->
-    <div class="card">
-      <div class="card-header">
-        <div class="card-title">
-          <i class="fa-solid fa-id-badge" style="color:var(--g1);"></i> ข้อมูลผู้ใช้งานครบ 38 ฟิลด์ (SSO User Payload)
+    <div class="card p-5">
+      <div class="flex items-center justify-between gap-3 mb-3">
+        <div class="font-bold text-base flex items-center gap-2">
+          <i data-lucide="id-card" class="w-5 h-5 accent"></i> ข้อมูลผู้ใช้งานครบ 38 ฟิลด์ (SSO User Payload)
         </div>
         <div style="display:flex;gap:0.5rem;">
-          <button type="button" class="btn btn-sm btn-outline" onclick="toggleRawJson()">
-            <i class="fa-solid fa-code"></i> สลับดู JSON ดิบ
+          <button type="button" class="btn-ghost !py-1 !px-2.5 !text-xs" onclick="toggleRawJson()">
+            <i data-lucide="code" class="w-3.5 h-3.5"></i> สลับดู JSON ดิบ
           </button>
         </div>
       </div>
-      <p style="font-size:0.9rem;color:var(--muted);margin-top:0;">
+      <p style="font-size:0.88rem;color:var(--muted);margin-top:0;margin-bottom:1rem;">
         โครงสร้างข้อมูลผู้ใช้ที่ได้รับจากการทำ Handshake บัตรผ่าน Single Sign-On (รองรับทั้ง PascalCase และ camelCase ตามมาตรฐานระบบ):
       </p>
 
@@ -151,47 +157,45 @@
     </div>
 
     <!-- Section 2: ทดสอบการเรียกใช้งาน Central Master Data ผ่าน SSO Guard -->
-    <div class="card">
-      <div class="card-header">
-        <div class="card-title">
-          <i class="fa-solid fa-database" style="color:var(--blue);"></i> ทดสอบเรียกใช้ Central Master Data ผ่าน STB_SSO SDK
-        </div>
+    <div class="card p-5">
+      <div class="font-bold text-base flex items-center gap-2 mb-2">
+        <i data-lucide="database" class="w-5 h-5 text-blue-500"></i> ทดสอบเรียกใช้ Central Master Data ผ่าน STB_SSO SDK
       </div>
-      <p style="font-size:0.9rem;color:var(--muted);margin-top:0;">
+      <p style="font-size:0.88rem;color:var(--muted);margin-top:0;margin-bottom:1rem;">
         เว็บแอปย่อยสามารถดึงข้อมูลทำเนียบบุคลากร โครงสร้างสังกัด และตำแหน่งขององค์กรผ่าน <code>STB_SSO</code> ได้โดยตรง:
       </p>
 
       <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:1rem;margin-top:0.5rem;">
         <!-- Test 1: Personnel -->
-        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:1rem;padding:1.15rem;display:flex;flex-direction:column;justify-content:space-between;gap:0.75rem;">
+        <div class="p-4 rounded-xl soft flex flex-col justify-between gap-3">
           <div>
-            <div style="font-weight:700;color:var(--text);font-size:0.96rem;"><i class="fa-solid fa-users"></i> ดึงทำเนียบบุคลากร</div>
+            <div style="font-weight:700;color:var(--text);font-size:0.96rem;display:flex;align-items:center;gap:0.4rem;"><i data-lucide="users" class="w-4 h-4"></i> ดึงทำเนียบบุคลากร</div>
             <div style="font-size:0.84rem;color:var(--muted);">เรียก <code>STB_SSO.getPersonnelList()</code></div>
           </div>
-          <button type="button" class="btn btn-sm btn-primary" onclick="testFetchPersonnel()">
-            <i class="fa-solid fa-download"></i> ทดสอบดึงบุคลากร
+          <button type="button" class="btn-primary !py-1.5 !text-xs" onclick="testFetchPersonnel()">
+            <i data-lucide="download" class="w-3.5 h-3.5"></i> ทดสอบดึงบุคลากร
           </button>
         </div>
 
         <!-- Test 2: Reference Data -->
-        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:1rem;padding:1.15rem;display:flex;flex-direction:column;justify-content:space-between;gap:0.75rem;">
+        <div class="p-4 rounded-xl soft flex flex-col justify-between gap-3">
           <div>
-            <div style="font-weight:700;color:var(--text);font-size:0.96rem;"><i class="fa-solid fa-sitemap"></i> ดึงโครงสร้างสังกัด 4 ระดับ</div>
+            <div style="font-weight:700;color:var(--text);font-size:0.96rem;display:flex;align-items:center;gap:0.4rem;"><i data-lucide="network" class="w-4 h-4"></i> ดึงโครงสร้างสังกัด 4 ระดับ</div>
             <div style="font-size:0.84rem;color:var(--muted);">เรียก <code>STB_SSO.getReferenceData()</code></div>
           </div>
-          <button type="button" class="btn btn-sm btn-primary" onclick="testFetchReferenceData()">
-            <i class="fa-solid fa-download"></i> ทดสอบดึงสังกัด
+          <button type="button" class="btn-primary !py-1.5 !text-xs" onclick="testFetchReferenceData()">
+            <i data-lucide="download" class="w-3.5 h-3.5"></i> ทดสอบดึงสังกัด
           </button>
         </div>
 
         <!-- Test 3: Position Structure -->
-        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:1rem;padding:1.15rem;display:flex;flex-direction:column;justify-content:space-between;gap:0.75rem;">
+        <div class="p-4 rounded-xl soft flex flex-col justify-between gap-3">
           <div>
-            <div style="font-weight:700;color:var(--text);font-size:0.96rem;"><i class="fa-solid fa-briefcase"></i> ดึงโครงสร้างตำแหน่ง กทม.</div>
+            <div style="font-weight:700;color:var(--text);font-size:0.96rem;display:flex;align-items:center;gap:0.4rem;"><i data-lucide="layers" class="w-4 h-4"></i> ดึงโครงสร้างตำแหน่ง กทม.</div>
             <div style="font-size:0.84rem;color:var(--muted);">เรียก <code>STB_SSO.getPositionStructure()</code></div>
           </div>
-          <button type="button" class="btn btn-sm btn-primary" onclick="testFetchPositionStructure()">
-            <i class="fa-solid fa-download"></i> ทดสอบดึงตำแหน่ง
+          <button type="button" class="btn-primary !py-1.5 !text-xs" onclick="testFetchPositionStructure()">
+            <i data-lucide="download" class="w-3.5 h-3.5"></i> ทดสอบดึงตำแหน่ง
           </button>
         </div>
       </div>
@@ -204,20 +208,18 @@
     </div>
 
     <!-- Section 3: ทดสอบการอัปโหลดไฟล์เข้า Google Drive จากแอปย่อย -->
-    <div class="card">
-      <div class="card-header">
-        <div class="card-title">
-          <i class="fa-brands fa-google-drive" style="color:#FB8C00;"></i> ทดสอบอัปโหลดไฟล์เข้า Google Drive จากเว็บแอปย่อย
-        </div>
+    <div class="card p-5">
+      <div class="font-bold text-base flex items-center gap-2 mb-2">
+        <i data-lucide="cloud-upload" class="w-5 h-5 text-amber-500"></i> ทดสอบอัปโหลดไฟล์เข้า Google Drive จากเว็บแอปย่อย
       </div>
-      <p style="font-size:0.9rem;color:var(--muted);margin-top:0;">
+      <p style="font-size:0.88rem;color:var(--muted);margin-top:0;margin-bottom:1rem;">
         ใช้โมดูล <code>STB_DRIVE.uploadToDrive(file, { folderId, fileName })</code> ส่งไฟล์ตรงไปยัง Cloud Storage ของ สตบ.สนท.:
       </p>
 
       <div style="display:flex;flex-wrap:wrap;gap:0.75rem;align-items:center;">
         <input type="file" id="subappTestFileInput" class="inp" style="max-width:340px;">
-        <button type="button" class="btn btn-amber" onclick="testSubAppDriveUpload()">
-          <i class="fa-solid fa-cloud-arrow-up"></i> ทดสอบอัปโหลดขึ้น Drive
+        <button type="button" class="btn-amber !py-2 !px-4" onclick="testSubAppDriveUpload()">
+          <i data-lucide="upload" class="w-4 h-4"></i> ทดสอบอัปโหลดขึ้น Drive
         </button>
       </div>
 
@@ -239,7 +241,16 @@
     var CURRENT_USER = null;
     var CURRENT_ACCESS_LEVEL = 'None';
 
+    function triggerSubappIcons() {
+      try {
+        if (typeof lucide !== 'undefined' && lucide.createIcons) {
+          lucide.createIcons();
+        }
+      } catch (e) {}
+    }
+
     document.addEventListener('DOMContentLoaded', async function () {
+      triggerSubappIcons();
       try {
         if (window.LOADER) {
           window.LOADER.brandBoot({
@@ -265,7 +276,8 @@
           icon: 'error',
           title: 'การยืนยันสิทธิ์ SSO ล้มเหลว',
           text: err.message || 'ไม่สามารถเข้าใช้งานได้ กรุณาเข้าสู่ระบบผ่าน Central Portal',
-          confirmButtonText: 'กลับสู่ Central Portal'
+          confirmButtonText: 'กลับสู่ Central Portal',
+          confirmButtonColor: '#007B3E'
         }).then(function () {
           window.location.href = '../Portal-SSO/index.html';
         });
@@ -294,11 +306,9 @@
 
       document.getElementById('ssoTimestamp').textContent = 'ตรวจสอบสิทธิ์เมื่อ: ' + new Date().toLocaleTimeString('th-TH');
 
-      // เรนเดอร์ 38 ฟิลด์ลงใน Grid
       render38Fields(u);
-
-      // ใส่ JSON ดิบ
       document.getElementById('rawJsonContent').textContent = JSON.stringify(u, null, 2);
+      triggerSubappIcons();
     }
 
     function render38Fields(u) {
@@ -374,7 +384,7 @@
         var resTitle = document.getElementById('masterDataResultTitle');
         var resContent = document.getElementById('masterDataResultContent');
 
-        resTitle.innerHTML = '<i class="fa-solid fa-users"></i> ผลลัพธ์ทำเนียบบุคลากร (พบทั้งหมด ' + (list ? list.length : 0) + ' รายการ):';
+        resTitle.innerHTML = '<span class="flex items-center gap-1.5"><i data-lucide="users" class="w-4 h-4"></i> ผลลัพธ์ทำเนียบบุคลากร (พบทั้งหมด ' + (list ? list.length : 0) + ' รายการ):</span>';
         var tableHtml = ''
           + '<table class="tbl">'
           + '  <thead>'
@@ -397,7 +407,7 @@
             + '  <td style="font-weight:600;">' + (p.full_name || (p.prefix || '') + p.first_name + ' ' + p.last_name) + '</td>'
             + '  <td>' + (p.position || '-') + '</td>'
             + '  <td>' + (p.office || '-') + '</td>'
-            + '  <td><span class="chip">' + (p.status || '-') + '</span></td>'
+            + '  <td><span class="badge chip">' + (p.status || '-') + '</span></td>'
             + '</tr>';
         });
 
@@ -408,16 +418,17 @@
 
         resContent.innerHTML = tableHtml;
         resBox.style.display = 'block';
+        triggerSubappIcons();
         Swal.fire({
           toast: true,
           position: 'top-end',
           icon: 'success',
           title: 'ดึงข้อมูลบุคลากรสำเร็จ (' + (list ? list.length : 0) + ' รายการ)',
           showConfirmButton: false,
-          timer: 2500
+          timer: 2400
         });
       } catch (err) {
-        Swal.fire({ icon: 'error', title: 'ดึงข้อมูลบุคลากรไม่สำเร็จ', text: err.message });
+        Swal.fire({ icon: 'error', title: 'ดึงข้อมูลบุคลากรไม่สำเร็จ', text: err.message, confirmButtonColor: '#007B3E' });
       } finally {
         if (window.LOADER) window.LOADER.hide();
       }
@@ -431,7 +442,7 @@
         var resTitle = document.getElementById('masterDataResultTitle');
         var resContent = document.getElementById('masterDataResultContent');
 
-        resTitle.innerHTML = '<i class="fa-solid fa-sitemap"></i> ผลลัพธ์โครงสร้างสังกัดและตัวเลือก (พบทั้งหมด ' + (list ? list.length : 0) + ' รายการ):';
+        resTitle.innerHTML = '<span class="flex items-center gap-1.5"><i data-lucide="network" class="w-4 h-4"></i> ผลลัพธ์โครงสร้างสังกัดและตัวเลือก (พบทั้งหมด ' + (list ? list.length : 0) + ' รายการ):</span>';
         var tableHtml = ''
           + '<table class="tbl">'
           + '  <thead>'
@@ -447,7 +458,7 @@
         (list || []).slice(0, 10).forEach(function (r) {
           tableHtml += ''
             + '<tr>'
-            + '  <td><span class="chip">' + (r.type || '-') + '</span></td>'
+            + '  <td><span class="badge chip">' + (r.type || '-') + '</span></td>'
             + '  <td style="font-weight:600;">' + (r.value || '-') + '</td>'
             + '  <td>' + (r.short_name || '-') + '</td>'
             + '  <td>' + (r.parent_value || '-') + '</td>'
@@ -461,16 +472,17 @@
 
         resContent.innerHTML = tableHtml;
         resBox.style.display = 'block';
+        triggerSubappIcons();
         Swal.fire({
           toast: true,
           position: 'top-end',
           icon: 'success',
           title: 'ดึงโครงสร้างสังกัดสำเร็จ (' + (list ? list.length : 0) + ' รายการ)',
           showConfirmButton: false,
-          timer: 2500
+          timer: 2400
         });
       } catch (err) {
-        Swal.fire({ icon: 'error', title: 'ดึงโครงสร้างสังกัดไม่สำเร็จ', text: err.message });
+        Swal.fire({ icon: 'error', title: 'ดึงโครงสร้างสังกัดไม่สำเร็จ', text: err.message, confirmButtonColor: '#007B3E' });
       } finally {
         if (window.LOADER) window.LOADER.hide();
       }
@@ -484,7 +496,7 @@
         var resTitle = document.getElementById('masterDataResultTitle');
         var resContent = document.getElementById('masterDataResultContent');
 
-        resTitle.innerHTML = '<i class="fa-solid fa-briefcase"></i> ผลลัพธ์โครงสร้างตำแหน่ง 6 ประเภท (พบทั้งหมด ' + (list ? list.length : 0) + ' ตำแหน่ง):';
+        resTitle.innerHTML = '<span class="flex items-center gap-1.5"><i data-lucide="layers" class="w-4 h-4"></i> ผลลัพธ์โครงสร้างตำแหน่ง 6 ประเภท (พบทั้งหมด ' + (list ? list.length : 0) + ' ตำแหน่ง):</span>';
         var tableHtml = ''
           + '<table class="tbl">'
           + '  <thead>'
@@ -499,7 +511,7 @@
         (list || []).slice(0, 10).forEach(function (p) {
           tableHtml += ''
             + '<tr>'
-            + '  <td><span class="chip">' + (p.position_type || '-') + '</span></td>'
+            + '  <td><span class="badge chip">' + (p.position_type || '-') + '</span></td>'
             + '  <td style="font-weight:600;">' + (p.position_name || '-') + '</td>'
             + '  <td>' + (p.position_level || 'ไม่มีระดับ') + '</td>'
             + '</tr>';
@@ -512,16 +524,17 @@
 
         resContent.innerHTML = tableHtml;
         resBox.style.display = 'block';
+        triggerSubappIcons();
         Swal.fire({
           toast: true,
           position: 'top-end',
           icon: 'success',
           title: 'ดึงโครงสร้างตำแหน่งสำเร็จ (' + (list ? list.length : 0) + ' ตำแหน่ง)',
           showConfirmButton: false,
-          timer: 2500
+          timer: 2400
         });
       } catch (err) {
-        Swal.fire({ icon: 'error', title: 'ดึงโครงสร้างตำแหน่งไม่สำเร็จ', text: err.message });
+        Swal.fire({ icon: 'error', title: 'ดึงโครงสร้างตำแหน่งไม่สำเร็จ', text: err.message, confirmButtonColor: '#007B3E' });
       } finally {
         if (window.LOADER) window.LOADER.hide();
       }
@@ -533,30 +546,30 @@
     async function testSubAppDriveUpload() {
       var fileInput = document.getElementById('subappTestFileInput');
       if (!fileInput || !fileInput.files || !fileInput.files[0]) {
-        Swal.fire({ icon: 'warning', title: 'กรุณาเลือกไฟล์ที่ต้องการทดสอบอัปโหลด' });
+        Swal.fire({ icon: 'warning', title: 'กรุณาเลือกไฟล์ที่ต้องการทดสอบอัปโหลด', confirmButtonColor: '#007B3E' });
         return;
       }
 
       var file = fileInput.files[0];
       try {
         if (window.LOADER) window.LOADER.busy(Promise.resolve(), 'กำลังอัปโหลดไฟล์เข้า Google Drive จากแอปย่อย...');
-        var res = await window.STB_DRIVE.uploadToDrive({
-          file: file,
+        var res = await window.STB_DRIVE.uploadToDrive(file, {
           fileName: 'SUBAPP_TEST_' + Date.now() + '_' + file.name
         });
 
-        var finalUrl = (res && (res.fileUrl || res.downloadUrl)) || '';
+        var finalUrl = (res && (res.lh3Url || res.fileUrl || res.downloadUrl)) || '';
         var box = document.getElementById('uploadResultBox');
         var t = document.getElementById('uploadResultTitle');
         var u = document.getElementById('uploadResultUrl');
 
-        t.innerHTML = '<i class="fa-solid fa-circle-check" style="color:var(--g1);"></i> อัปโหลดเข้า Google Drive สำเร็จ!';
-        u.innerHTML = 'URL ไฟล์: <a href="' + finalUrl + '" target="_blank" style="color:var(--g1);font-weight:700;">' + finalUrl + '</a>';
+        t.innerHTML = '<span class="flex items-center gap-1.5 accent"><i data-lucide="check-circle" class="w-4 h-4"></i> อัปโหลดเข้า Google Drive สำเร็จ!</span>';
+        u.innerHTML = 'URL ไฟล์: <a href="' + finalUrl + '" target="_blank" class="lnk">' + finalUrl + '</a>';
         box.style.display = 'block';
+        triggerSubappIcons();
 
-        Swal.fire({ icon: 'success', title: 'อัปโหลดสำเร็จ!', text: 'ไฟล์ถูกจัดเก็บใน Google Drive เรียบร้อยแล้ว' });
+        Swal.fire({ icon: 'success', title: 'อัปโหลดสำเร็จ!', text: 'ไฟล์ถูกจัดเก็บใน Google Drive เรียบร้อยแล้ว', confirmButtonColor: '#007B3E' });
       } catch (err) {
-        Swal.fire({ icon: 'error', title: 'อัปโหลดไฟล์ไม่สำเร็จ', text: err.message });
+        Swal.fire({ icon: 'error', title: 'อัปโหลดไฟล์ไม่สำเร็จ', text: err.message, confirmButtonColor: '#007B3E' });
       } finally {
         if (window.LOADER) window.LOADER.hide();
       }
@@ -580,4 +593,3 @@
   </script>
 </body>
 </html>
-

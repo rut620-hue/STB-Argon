@@ -42,16 +42,16 @@ d:\STB APP n2/
 | โมดูล / ไฟล์ | ฟังก์ชัน / ส่วนประกอบ | ช่วงบรรทัด (`StartLine`–`EndLine`) | หน้าที่โดยย่อ |
 | :--- | :--- | :---: | :--- |
 | `index.html` (Root) | Redirector Script | 1–56 | นำทางผู้ใช้จาก Root ไปยัง `WebApp/Portal-SSO/index.html` ทันที พร้อมส่งต่อ `search` และ `hash` |
-| `WebApp/Portal-SSO/index.html` | Central Portal SPA Shell | 1–163 | โครงสร้าง HTML หลัก (`#splash`, `#ldMask`, `#loginView`, `#appView`, `#setupBanner`, `#appModal`) |
-| `WebApp/Portal-SSO/assets/css/portal.css` | BMA Green Theme & UI Components | 1–555 | ฟอนต์หลัก `Sarabun` จาก Google Fonts, ธีมสีเขียว กทม. (Light/Dark Mode), Split Auth Card, Sidebar, Stat Cards, Tables & Modals |
+| `WebApp/Portal-SSO/index.html` | Central Portal SPA Shell | 1–198 | โครงสร้าง HTML หลักถอดแบบต้นฉบับ (`ref_122wc/Index.html`): Tailwind CDN, Lucide, Chart.js, XLSX, Sarabun, `#splash`, `#loginView` Split Brand Panel, `#appView` (Sidebar, Header, Main, Footer), `#appModal` & `#modalRoot` |
+| `WebApp/Portal-SSO/assets/css/portal.css` | BMA Green Theme & UI Components | 1–470 | โทเคนสีเขียว กทม. (`--g0`..`--g2`) + `html.dark`, ฟอนต์ Sarabun, Split Brand Panel, Sidebar, Stat Cards, Tables, Buttons, Chips, Modals, App Grid & กระดานวาดลายเซ็น `.sig-pad-canvas` |
 | `WebApp/Portal-SSO/assets/js/portal-config.js` | `STB_CONFIG` | 1–91 | ตั้งค่า Supabase (`ycyefnsfamlhnwgizavs`), Schema `portal`, `GAS_WEBAPP_URL`, `GAS_BRIDGE_URL`, `PORTAL_BASE_URL` |
 | `WebApp/Portal-SSO/assets/js/portal-api.js` | `PORTAL_API` | 1–275 | Wrapper เรียกใช้ RPC 26 ตัวบน Supabase Schema `portal` พร้อมจัดการ Session Token และ First-Time Setup Bypass |
-| `WebApp/Portal-SSO/assets/js/portal-app.js` | `PORTAL_APP` (Core Controller) | 1–1521 | ควบคุม Boot, First-Time Setup Bypass, Login, สมัครสมาชิก 3 ขั้นตอน (Modulo-11), Dashboard SSO Launch, Profile & Canvas Signature |
-| `WebApp/Portal-SSO/assets/js/portal-admin.js` | `PORTAL_ADMIN` (Admin Controller) | 1–2046 | จัดการ 6 โมดูลแอดมิน: `#personnel` (20 คอลัมน์), `#users` (Auto-Login ใน Setup), `#webapps`, `#reference` (`▲▼` & Batch), `#positions` (`▲▼` & Batch), `#settings` (13 Keys & Reset) |
+| `WebApp/Portal-SSO/assets/js/portal-app.js` | `PORTAL_APP` (Core Controller) | 1–1767 | ควบคุม Boot, Setup Bypass, Auth, Helper Atoms (`icons`, `THEMEC`, `GRADC`, `statCard`, `sectionBar`, `th`, `TW`), สลับธีม `html.dark`, เมนู Sidebar, Dashboard (4 Stat Cards + SSO Launchpad + 2 กราฟ Chart.js), Profile & Canvas Signature |
+| `WebApp/Portal-SSO/assets/js/portal-admin.js` | `PORTAL_ADMIN` (Admin Controller) | 1–2006 | จัดการ 6 โมดูลแอดมินตาม UI Atoms: `#personnel`, `#users`, `#webapps`, `#reference` (`▲▼` & Batch), `#positions` (`▲▼` & Batch), `#settings` (13 Keys & Reset) พร้อม Lucide Icons & Auto triggerIcons() |
 | `WebApp/shared/stb-loader.js` | `LOADER` (`STB_LOADER`) | 1–369 | **BMA 3D Logo Flip Loader** (`setBrand`, `brandBoot`, `show`, `hide`, `page`, `showPage`, `hideBoot`, `setLogo`, `busy`, `closeSplash`) |
 | `WebApp/shared/stb-drive-upload.js` | `STB_DRIVE` | 1–196 | ย่อรูปด้วย Canvas (`compressImageFile`), แปลงลิงก์รูป Drive (`resolveDriveImageUrl`), ตรวจสอบโฟลเดอร์ (`checkDriveFolder`), อัปโหลดไฟล์ (`uploadToDrive`) |
 | `WebApp/shared/stb-sso-guard.js` | `STB_SSO` (`PortalAPI`) | 1–240 | บังคับเข้าเว็บแอปผ่าน SSO (`requireSSO`), ดึง Master Data (`getPersonnelList`, `getReferenceData`, `getPositionStructure`), ออกจากระบบ (`logout`) |
-| `WebApp/sample-subapp/index.html` | Sample Sub-App UI | 1–524 | เว็บแอปย่อยตัวอย่าง ทดสอบรับสิทธิ์ SSO Handshake 38 ฟิลด์, ทดสอบดึง Master Data และอัปโหลดไฟล์เข้า Google Drive |
+| `WebApp/sample-subapp/index.html` | Sample Sub-App UI | 1–595 | เว็บแอปย่อยตัวอย่าง สไตล์ BMA Green (Tailwind Play CDN + Lucide Icons + `portal.css`) ทดสอบรับสิทธิ์ SSO Handshake 38 ฟิลด์, Master Data และ Drive Upload |
 | `supabase/migrations/01_portal_schema_and_tables.sql` | Schema, Sequences & 8 Tables | 1–165 | สร้าง Schema `portal`, Sequences รันรหัสอัตโนมัติ และตารางทั้ง 8 ตารางครบ 68 คอลัมน์ |
 | `supabase/migrations/02_portal_rpc_and_seed.sql` | RPCs, Setup Guard, Reset & Seed | 1–1812 | ฟังก์ชัน RPC ทั้ง 26 ตัว (`fn_check_system_init`, `fn_login`, `fn_verify_sso_handshake`, `fn_reset_test_data` ฯลฯ) และ Seed ค่าเริ่มต้น |
 | `gas/appsscript.json` | WebApp & OAuth Scopes | 1–15 | ตั้งค่า WebApp (`ANYONE_ANONYMOUS`) และสิทธิ์ `drive`, `send_mail`, `external_request` |
