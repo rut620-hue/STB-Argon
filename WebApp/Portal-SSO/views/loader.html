@@ -1,0 +1,124 @@
+<!-- ============================================================
+     BMA 3D LOGO FLIP LOADER VIEW (views/loader.html)
+     ============================================================ -->
+<style>
+:root {
+  --logo-bma: url('https://pr-bangkok.com/wp-content/uploads/2025/06/231116_BMA-Emblem_Edited_Green-600x600.png');
+  --logo-dept: url('https://upload.wikimedia.org/wikipedia/commons/3/35/Patch_of_Bangkok_City_Law_Enforcement_Department.png');
+}
+
+.loader {
+  position: relative;
+  width: var(--ld-size, 80px);
+  height: var(--ld-size, 80px);
+  display: inline-block;
+  flex: none;
+}
+.loader::before,
+.loader::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--logo-bma);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  transform-origin: center center;
+  backface-visibility: hidden;
+  animation: logo-flip 2s infinite linear;
+}
+.loader::before {
+  --clip-v: inset(0 50% 0 0);
+  --clip-h: inset(0 0 50% 0);
+  --tx-v: calc(var(--ld-size, 80px) * -0.16);
+  --ty-h: calc(var(--ld-size, 80px) * -0.16);
+}
+.loader::after {
+  --clip-v: inset(0 0 0 50%);
+  --clip-h: inset(50% 0 0 0);
+  --tx-v: calc(var(--ld-size, 80px) * 0.16);
+  --ty-h: calc(var(--ld-size, 80px) * 0.16);
+}
+
+@keyframes logo-flip {
+  0%, 2.5%    { clip-path: var(--clip-v); transform: translate(0px, 0px) perspective(200px) rotateX(0deg);  background-image: var(--logo-bma); }
+  16.5%       { clip-path: var(--clip-v); transform: translate(var(--tx-v), 0px) perspective(200px) rotateX(0deg);  background-image: var(--logo-bma); }
+  24.75%      { clip-path: var(--clip-v); transform: translate(var(--tx-v), 0px) perspective(200px) rotateX(90deg); background-image: var(--logo-bma); }
+  24.76%      { clip-path: var(--clip-v); transform: translate(var(--tx-v), 0px) perspective(200px) rotateX(90deg); background-image: var(--logo-dept); }
+  33%         { clip-path: var(--clip-v); transform: translate(var(--tx-v), 0px) perspective(200px) rotateX(0deg);  background-image: var(--logo-dept); }
+  47.5%, 49.9%{ clip-path: var(--clip-v); transform: translate(0px, 0px) perspective(200px) rotateX(0deg);  background-image: var(--logo-dept); }
+  50%, 52.5%  { clip-path: var(--clip-h); transform: translate(0px, 0px) perspective(200px) rotateY(0deg);  background-image: var(--logo-dept); }
+  66.5%       { clip-path: var(--clip-h); transform: translate(0px, var(--ty-h)) perspective(200px) rotateY(0deg);  background-image: var(--logo-dept); }
+  74.75%      { clip-path: var(--clip-h); transform: translate(0px, var(--ty-h)) perspective(200px) rotateY(90deg); background-image: var(--logo-dept); }
+  74.76%      { clip-path: var(--clip-h); transform: translate(0px, var(--ty-h)) perspective(200px) rotateY(90deg); background-image: var(--logo-bma); }
+  83%         { clip-path: var(--clip-h); transform: translate(0px, var(--ty-h)) perspective(200px) rotateY(0deg);  background-image: var(--logo-bma); }
+  97.5%, 100% { clip-path: var(--clip-h); transform: translate(0px, 0px) perspective(200px) rotateY(0deg);  background-image: var(--logo-bma); }
+}
+
+/* Overlay Mask */
+.ld-mask {
+  position: fixed; inset: 0; z-index: 9600;
+  background: rgba(8, 20, 14, 0.42);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity 0.22s ease;
+}
+.ld-mask.on { opacity: 1; pointer-events: auto; }
+.ld-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 1.25rem;
+  padding: 1.7rem 2.2rem;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.3);
+  display: flex; flex-direction: column; align-items: center; gap: 0.9rem;
+  min-width: 210px;
+}
+.ld-text {
+  font-size: 0.83rem; font-weight: 600; color: var(--text);
+  letter-spacing: 0.01em; text-align: center; line-height: 1.5;
+}
+.ld-sub { font-size: 0.7rem; color: var(--muted); margin-top: -0.45rem; }
+
+/* Progress Bar */
+.ld-bar {
+  width: 150px; height: 4px; border-radius: 99px;
+  background: var(--border); overflow: hidden; position: relative;
+}
+.ld-bar > span {
+  position: absolute; left: -40%; top: 0; height: 100%; width: 40%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, var(--g1), var(--g2));
+  animation: ld-slide 1.15s ease-in-out infinite;
+}
+@keyframes ld-slide {
+  0% { left: -40%; }
+  100% { left: 100%; }
+}
+
+/* Page Loader */
+.ld-page {
+  min-height: 56vh;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 1rem; text-align: center;
+}
+.ld-page .ld-text { font-size: 0.9rem; }
+.ld-chip {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  font-size: 0.7rem; font-weight: 600;
+  padding: 0.24rem 0.75rem; border-radius: 99px;
+  background: var(--chip); color: var(--chip-tx);
+}
+
+/* Inline Loader */
+.ld-inline {
+  display: flex; align-items: center; justify-content: center;
+  gap: 0.75rem; padding: 2.2rem 1rem;
+}
+.ld-inline .ld-text { font-size: 0.78rem; }
+
+@media (max-width: 640px) {
+  .ld-card { padding: 1.4rem 1.6rem; min-width: 180px; }
+}
+</style>
+

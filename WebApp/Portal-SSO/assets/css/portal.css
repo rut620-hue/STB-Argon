@@ -15,6 +15,19 @@ body { -webkit-font-smoothing: antialiased; margin: 0; padding: 0; }
   --teal: #00838F; --lime: #8BC34A; --amber: #FFB300; --orange: #FF7043;
   --red: #E53935; --purple: #4A148C; --crimson: #C62828; --pumpkin: #FB8C00;
   --yellow: #FDD835; --blue: #0288D1;
+  /* 12 Standard Palette Colors */
+  --color-1: #007B3E;  /* BMA Primary Green */
+  --color-2: #4EBA6F;  /* BMA Accent Green */
+  --color-3: #00838F;  /* Teal */
+  --color-4: #8BC34A;  /* Lime */
+  --color-5: #FFB300;  /* Amber */
+  --color-6: #FF7043;  /* Orange */
+  --color-7: #E53935;  /* Red */
+  --color-8: #4A148C;  /* Purple */
+  --color-9: #C62828;  /* Crimson */
+  --color-10: #FB8C00; /* Pumpkin */
+  --color-11: #FDD835; /* Yellow */
+  --color-12: #0288D1; /* Blue */
   --bg: #f5f8f6; --surface: #ffffff; --surface2: #f8fbf9;
   --border: #e6efe9; --text: #1e293b; --muted: #64748b;
   --thead: #eef7f1; --thead-tx: #2c4a38; --rowhover: #f6fbf8;
@@ -43,7 +56,8 @@ html.dark {
 html.dark .accent { color: var(--g2); }
 .splash-bg { background: linear-gradient(135deg, var(--g0) 0%, var(--g1) 55%, var(--g2) 120%); }
 .brand-panel { background: linear-gradient(135deg, var(--g1), var(--g2)); }
-.footer-bar { background: var(--surface2); border-top: 1px solid var(--border); }
+.footer-bar { background: #F1F5F9; border-top: 1px solid var(--border); }
+html.dark .footer-bar { background: #161B22; border-top: 1px solid var(--border); }
 
 /* ================= SIDEBAR ================= */
 .sidebar {

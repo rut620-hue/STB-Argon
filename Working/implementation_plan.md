@@ -1,82 +1,101 @@
-# 🌐 แผนการปรับปรุงความสอดคล้องครบวงจรตาม Blueprint & ต้นแบบ `122wcJrr...` 100%
-**ปุ่ม `+ เพิ่มแถว` ในฟอร์มโครงสร้าง + การจัดการชื่อกลุ่มงานซ้ำข้ามส่วนงาน & ตัดคำซ้ำใน Dropdown + ย้ายคำนำหน้าชื่อไว้ในโครงสร้างตำแหน่ง + เชื่อมโยงทั้ง 8 เมนู**
+# แผนตรวจสอบสถานะงาน (Audit Checklist) & สถาปัตยกรรมแยกไฟล์แบบ OOP Modular
 
 > [!IMPORTANT]
-> **สถานะปัจจุบัน:** ปรับปรุงแผนตามข้อเสนอแนะของผู้ใช้ (ยังไม่มีการแก้โค้ดจริงใดๆ จนกว่าผู้ใช้จะกด **Proceed**) โดยซิงค์เนื้อหาตรงกัน 100% กับ `<ArtifactDir>/dynamic_dropdown_structure_plan.md`
+> แผนฉบับนี้ปรับปรุงตามข้อเสนอแนะของผู้ใช้และซิงค์ตามกฎเหล็ก `.agents/AGENTS.md` (**Dual-Plan Sync Rule**):
+> 1. **ปรับปรุงกฎ `.agents/AGENTS.md` เรียบร้อยแล้ว:** บังคับกฎ **Map-First (ต้องอ่าน `Wiki/Code_Map.md` ก่อนวิเคราะห์ไฟล์ทุกครั้ง ห้ามเริ่มอ่านตั้งแต่บรรทัดแรกแบบสุ่ม)** และบังคับ **IDE Tools Only (`view_file`, `grep_search`, `find_by_name`, `list_dir`, `replace_file_content`, `write_to_file`)** ห้ามใช้ Node.js หรือ Terminal ในการอ่าน/วิเคราะห์/ตัดแบ่งไฟล์
+> 2. **ปรับปรุงข้อ 2.5 (การโหลดข้อมูลและหน้าจอ): เปลี่ยนมาใช้ระบบจาก `Loader.html` แทนทั้งหมด** (`LOADER.page`, `LOADER.into`, `LOADER.show`, `LOADER.hide`, `LOADER.busy`, `skeleton()`, `loadInto()`) ซึ่งเป็น BMA/สำนักเทศกิจ 3D Logo Flip Loader พร้อมแถบวิ่ง `.ld-bar` และ `.ld-chip` ตามต้นฉบับ `ref_122wc/Loader.html` 100%
 
 ---
 
-## 1. การออกแบบฟอร์มเพิ่มข้อมูลโครงสร้างด้วยปุ่ม `+ เพิ่มรายการ` และการป้องกันคำซ้ำใน Dropdown
+## 📊 ส่วนที่ 1: ตารางตรวจเช็คสถานะงาน (ทำไปแล้ว `✅` vs ยังไม่ได้ทำ `⏳`)
 
-จากโครงสร้างจริงของสำนักเทศกิจ เช่น:
-- **ส่วนตรวจและบังคับการ 1** $\rightarrow$ `[กลุ่มงานปฏิบัติการ, กลุ่มงานกิจการพิเศษ]`
-- **ส่วนตรวจและบังคับการ 2** $\rightarrow$ `[กลุ่มงานปฏิบัติการ, กลุ่มงานกิจการพิเศษ]`
-- **ส่วนตรวจและบังคับการ 3** $\rightarrow$ `[กลุ่มงานปฏิบัติการ, กลุ่มงานกิจการพิเศษ]`
+### 1.1 ข้อกำหนดที่ 1: Footer Fluid Width + พื้นหลังเทาอ่อน + ดึงชื่อระบบและชื่อหน่วยงานจากฐานข้อมูล
 
-เราจะออกแบบระบบทั้งฝั่ง **การบันทึกข้อมูลโครงสร้าง** และฝั่ง **การดึงไปแสดงใน Dropdown** ให้รองรับโครงสร้างนี้อย่างสมบูรณ์ดังนี้:
-
-### 1.1 ฟอร์มเพิ่มข้อมูลแบบกดปุ่ม `+ เพิ่มรายการ` (`addRow`) ในหน้า `#reference` และ `#positions`
-แทนที่จะแยกปุ่มเพิ่มเดี่ยวกับปุ่ม Textarea เราจะใช้รูปแบบเดียวกับโปรเจกต์ต้นแบบ `122wcJrr...` (`JsSettings.html`):
-1. เมื่อกดปุ่ม **"เพิ่มรายการ"** ในแต่ละแท็บ:
-   - ด้านบนของ Modal ให้เลือก **สังกัดแม่ (`parent_value`)** ก่อน (เช่น เลือก สำนักงาน/กอง $\rightarrow$ เลือก ส่วน/ฝ่าย `"ส่วนตรวจและบังคับการ 1"`)
-   - ด้านล่างเป็นรายการช่องกรอก `<input>` (ชื่อเต็ม + ชื่อย่อ) โดยเริ่มต้นมี 1 แถว และมีปุ่ม **`+ เพิ่มรายการ`** ให้กดเพิ่มแถว `<input>` ต่อท้ายได้ไม่จำกัด (พร้อมปุ่มถังขยะลบแถว)
-   - สามารถกด `+ เพิ่มรายการ` เพื่อพิมพ์ `"กลุ่มงานปฏิบัติการ"` ในแถวที่ 1 และ `"กลุ่มงานกิจการพิเศษ"` ในแถวที่ 2 แล้วกด **"บันทึกทั้งหมด"** ในครั้งเดียว!
-2. **การป้องกันการบันทึกซ้ำภายใต้สังกัดแม่เดียวกัน:**
-   - ระบบจะตรวจสอบว่าภายใต้ `parent_value` เดียวกัน (เช่น ภายใต้ `"ส่วนตรวจและบังคับการ 1"`) มีชื่อ `"กลุ่มงานปฏิบัติการ"` อยู่แล้วหรือไม่ ถ้ามีอยู่แล้วจะข้ามหรือแจ้งเตือนไม่ให้บันทึกซ้ำซ้อนในสังกัดแม่เดียวกัน
-   - แต่ถ้าอยู่คนละ `parent_value` (เช่น เพิ่ม `"กลุ่มงานปฏิบัติการ"` ภายใต้ `"ส่วนตรวจและบังคับการ 2"`) ระบบจะอนุญาตให้บันทึกได้อย่างถูกต้อง
-3. **การแสดงผลในตาราง `#reference` (มีตัวกรองตามสังกัดแม่):**
-   - ในแท็บ `2. สำนักงาน/กอง`, `3. ส่วน/ฝ่าย`, และ `4. กลุ่มงาน` จะมี Dropdown ตัวกรองด้านบนตารางให้เลือกดูเฉพาะลูกของสังกัดแม่ที่ต้องการได้ (เช่น เลือกดูเฉพาะกลุ่มงานของ `"ส่วนตรวจและบังคับการ 1"`) และแสดงคอลัมน์สังกัดแม่คู่กันชัดเจน
-
-### 1.2 การกรองตามลำดับชั้น (Strict Parent-Child Filtering) และการตัดคำซ้ำ (`Deduplication`) ในทุก Dropdown
-เมื่อนำข้อมูลจาก `Reference Structure` และ `Position Structure` ไปใส่ใน `<select>` Dropdown (ทั้งในฟอร์มเพิ่ม/แก้ไขบุคลากร `#personnel`, หน้า `#profile`, หน้าสมัครสมาชิก Step 2, และแถบตัวกรองค้นหา):
-1. **การกรองตามสังกัดแม่ที่เลือก (`Strict Parent Match`):**
-   - ในฟังก์ชัน `getReferenceItems(type, parentValue)`:
-     - เมื่อระบุ `parentValue` (เช่น ผู้ใช้เลือกส่วน/ฝ่าย = `"ส่วนตรวจและบังคับการ 1"`): ระบบจะดึงเฉพาะรายการที่มี `parent_value === "ส่วนตรวจและบังคับการ 1"` เท่านั้น (จะไม่ดึงกลุ่มงานของส่วนตรวจฯ 2 หรือ 3 ปนเข้ามา)
-     - ถ้ายังไม่ได้เลือกสังกัดแม่ (`parentValue === ''`) ในฟอร์มเพิ่มบุคลากร: ช่อง Dropdown ลูกจะแสดง `-- กรุณาเลือกส่วน/ฝ่ายก่อน --` เพื่อบังคับให้เลือกตามลำดับชั้นที่ถูกต้อง
-2. **การตรวจสอบและตัดคำซ้ำ (`Unique / Deduplicate` 100%):**
-   - ในทุกฟังก์ชันที่สร้างรายการ `<option>` (`getReferenceItems`, `getPositionTypes`, `getPositionsByType`, `getLevelsByPosition`, และ `buildOptionsHtml`):
-     - จะผ่านตัวกรอง `seen[val.trim()]` เพื่อ **ตัดคำซ้ำออกเสมอ 100%**
-     - ดังนั้นไม่ว่าในฐานข้อมูลจะมีคำว่า `"กลุ่มงานปฏิบัติการ"` อยู่กี่แถว (จากส่วนตรวจฯ 1, 2, 3) หรือมีชื่อตำแหน่งซ้ำกันในหลายระดับ เวลาแสดงใน Dropdown (รวมถึง Dropdown ตัวกรองค้นหาที่ดึงรายการทั้งหมดมารวมกัน) **จะแสดงคำว่า `"กลุ่มงานปฏิบัติการ"` เพียงครั้งเดียวเสมอ ไม่มีทางแสดงซ้ำหลายบรรทัดใน Dropdown เดียวกันเด็ดขาด!**
+| รายการตามคำสั่ง | สถานะ | พิกัดปัจจุบันในโค้ด (`Wiki/Code_Map.md`) | สิ่งที่ต้องทำเพิ่ม (`⏳`) |
+| :--- | :---: | :--- | :--- |
+| **1.1 Footer Fluid Width (`w-full`)** | `✅ ทำไปแล้ว` | `WebApp/Portal-SSO/index.html` (L161–166): `<footer class="w-full footer-bar px-4 md:px-6 py-4 text-center">` เต็มความกว้างหน้าจอ | — |
+| **1.2 เติมสีพื้นหลังเทาอ่อน** | `✅ ทำไปแล้ว` | `WebApp/Portal-SSO/assets/css/portal.css` (L46): `.footer-bar { background: var(--surface2); border-top: 1px solid var(--border); }` | ปรับเฉดสีพื้นหลัง `.footer-bar` ให้เป็นสีเทาอ่อนที่ชัดเจน (`#F1F5F9` ในโหมดสว่าง และ `#161B22` ในโหมดมืด) |
+| **1.3 ชื่อระบบ (ดึงข้อมูลจาก DB/Settings)** | `✅ ทำไปแล้ว` | `portal-app.js` (`applyBranding`): ดึง `STATE.settings.App_Display_Name || STATE.settings.App_Name` มาใส่ใน `#ftSys` | เชื่อมกับ `LOADER.saveBrand()` และ `LOADER.brandBoot()` ตามแบบ `Loader.html` เพื่อแคชและแสดงชื่อระบบทันทีตั้งแต่เปิดหน้า |
+| **1.4 ชื่อหน่วยงาน (ดึงข้อมูลจาก DB/Settings)** | `⏳ ทำไปบางส่วน` | `portal-app.js` (`applyBranding`): ดึง `Organization_Name` มาใส่ใน `#ftOrg` แต่ปี พ.ศ. ใน `index.html` (L164) ยังพิมพ์ตายตัวว่า `2570` | 1. ดึงชื่อหน่วยงานจาก `STATE.settings` หรือชื่อสำนักจาก `STATE.referenceData` (`BUREAU`) พร้อมแคชผ่าน `LOADER.saveBrand()`<br>2. คำนวณปี พ.ศ. ปัจจุบันแบบ Dynamic (`new Date().getFullYear() + 543`) |
 
 ---
 
-## 2. การย้าย "คำนำหน้าชื่อ" มาไว้ในหน้า "โครงสร้างตำแหน่ง" (`#positions`)
+### 1.2 ข้อกำหนดที่ 2: ฟอนต์ Sarabun, Responsive Mobile Sidebar, Tailwind Modern Minimal Premium, `Loader.html` (Page/Inline/Overlay Loader), Modal/SweetAlert2, Badge, Table Overflow, Chart.js & 12 Theme Colors
 
-ตามคำสั่งของคุณและตรงตาม `JsSettings.html` ของโปรเจกต์ต้นแบบ `122wcJrr...`:
-1. **เมนู `#reference` ("โครงสร้างสังกัด 4 ระดับ"):**
-   - เหลือเฉพาะ 4 แท็บโครงสร้างหน่วยงาน: `1. สำนัก`, `2. สำนักงาน/กอง`, `3. ส่วน/ฝ่าย`, `4. กลุ่มงาน`
-2. **เมนู `#positions` ("โครงสร้างตำแหน่ง & คำนำหน้าชื่อ"):**
-   - รวมการจัดการ **คำนำหน้าชื่อ (`PREFIX`)**, **สถานะบุคลากร (`STATUS`)**, และ **โครงสร้างประเภทตำแหน่ง › สายงาน/ตำแหน่ง › ระดับตำแหน่ง** ไว้ในหน้าเดียวกัน พร้อมปุ่ม `+ เพิ่มรายการ` และปุ่มเลื่อนลำดับ `▲▼`
-   - ลบ Array คงที่ `order = ['ผู้บริหาร', ...]` และ `<option>` สถานะที่ Hardcode ไว้ออกทั้งหมด ดึงจากฐานข้อมูล 100%
-
----
-
-## 3. การเชื่อมโยงข้อมูลครบทั้ง 8 เมนูตาม Blueprint 100%
-
-1. **ความเชื่อมโยงระหว่าง `#webapps` $\leftrightarrow$ `#users` (สิทธิ์รายแอป) $\leftrightarrow$ `#dashboard`:**
-   - ใน `#webapps` เพิ่มปุ่มเลื่อนลำดับ `▲▼` (`sort_order`) และเมื่อเพิ่ม/แก้ไข/ลบเว็บแอป ข้อมูลจะซิงค์ไปยังตารางกำหนดสิทธิ์ใน `#users` และการ์ดใน `#dashboard` ทันที
-   - ใน `#users` โหลดรายชื่อบุคลากรและเว็บแอปอัตโนมัติเสมอ และรองรับการถอนสิทธิ์รายแอป (`NONE`) ออกจากตาราง `portal.permissions`
-   - ใน `#dashboard` (`fn_get_dashboard_apps`) แสดงการ์ดเว็บแอปตามสิทธิ์จริง (`SUPERADMIN` เห็นทุกแอป, `USER`/`ADMIN` เห็นเฉพาะแอปที่ได้สิทธิ์) พร้อมรองรับสถานะ `ปิดปรับปรุง` (ถ้าเป็น `USER` กดจะแจ้งเตือนว่าปิดปรับปรุง แต่ถ้าเป็น `SUPERADMIN` หรือ `ADMIN` ของแอปนั้นจะยังกดเข้าทดสอบได้ตาม Blueprint)
-2. **หน้าโปรไฟล์ส่วนตัว (`#profile`):**
-   - แสดงเลขบัตรประชาชน (Masked Format `X-XXXX-XXXXX-XX-X`), เปิดให้แก้ไข `Username` ได้ **1 ครั้ง** เมื่อ `username_changed === false`, และอัปเดตรูปโปรไฟล์บนแถบ Header (`#hdAvatar`) ทันที
-3. **หน้าตั้งค่าระบบ 13 Keys (`#settings`):**
-   - ซิงค์ชื่อคีย์ทั้ง **13 Keys** ให้ตรงกับฐานข้อมูล 100% และใช้ `saveSystemSettings`
+| รายการตามคำสั่ง | สถานะ | พิกัดปัจจุบันในโค้ด (`Wiki/Code_Map.md`) | สิ่งที่ต้องทำเพิ่ม (`⏳`) |
+| :--- | :---: | :--- | :--- |
+| **2.1 Font Sarabun Google** | `✅ ทำไปแล้ว` | `index.html` (L9–10) และ `portal.css` (L7–9) โหลด Google Fonts `Sarabun` (300–800) และบังคับใช้ทั้งระบบ | — |
+| **2.2 Responsive Mobile App + เมนูซ้ายมือสไลด์เปิด-ปิด** | `✅ ทำไปแล้ว` | `index.html` (L75–107): เมนูผู้ดูแลระบบและบุคลากรอยู่ด้านซ้ายมือ (`#sidebar`), เมื่อหน้าจอเล็กซ่อน (`-translate-x-full lg:translate-x-0`) มีปุ่มคลิกเปิดเมนูสไลด์ออกมาพร้อม `#overlay` | — |
+| **2.3 Icon สวยงามทันสมัย (Lucide Icons)** | `✅ ทำไปแล้ว` | `index.html` (L16) ใช้ Lucide Icons พร้อมฟังก์ชัน `icons()` รีเฟรชไอคอนทุกครั้งหลังเรนเดอร์ | — |
+| **2.4 UI/UX Tailwind CSS Style Modern มินิมอล Premium** | `✅ ทำไปแล้ว` | ใช้ Tailwind CSS Play CDN ร่วมกับโทเคนดีไซน์ใน `portal.css` (`.card`, `.stat-card`, `.section-bar`, `.pill`, `.seg`) | — |
+| **2.5 การโหลดหน้าจอและพื้นที่เนื้อหาด้วย `Loader.html` (`LOADER.page` / `LOADER.into` / `skeleton()`) + Lazy Loading** | `⏳ ปรับให้ใช้ Loader.html เต็มรูปแบบ` | มี `WebApp/shared/stb-loader.js` แล้ว แต่เวลาสลับหน้าหรือโหลดข้อมูลในพื้นที่เนื้อหา/การ์ดบางจุดยังไม่ได้เรียก `skeleton()` (`LOADER.page`) และ `loadInto(id, text)` (`LOADER.into`) ตามต้นฉบับ `ref_122wc/Loader.html` | 1. อัปเกรด `WebApp/shared/stb-loader.js` และแยก `WebApp/Portal-SSO/views/loader.html` ให้ตรงกับ `ref_122wc/Loader.html` 100% (`LOADER.page`, `LOADER.into`, `LOADER.show`, `LOADER.hide`, `LOADER.text`, `LOADER.busy`, `LOADER.brandBoot`, `LOADER.saveBrand`, `showLoad`, `hideLoad`, `loadText`, `skeleton`, `loadInto`)<br>2. เมื่อสลับหน้าหรือรอโหลดตาราง/กราฟ ให้แสดง `LOADER.page('กำลังโหลดข้อมูล...', 'โปรดรอสักครู่')` และ `LOADER.into(el, 'กำลังโหลด...')` แทนกล่องเทา `.sk` ทั้งหมด + ใส่ `loading="lazy"` ให้รูปภาพ |
+| **2.6 Loading Spin ทุกกระบวนการทำงาน** | `✅ ทำไปแล้ว` *(เชื่อม `LOADER.busy` `⏳`)* | มี Overlay Loader เต็มจอพร้อม Watchdog 60 วินาที | เชื่อมทุกกระบวนการทำงาน (เข้าสู่ระบบ, สมัครสมาชิก, บันทึก Modal, ลบข้อมูล, สลับสถานะ, อัปโหลดไฟล์) ให้ผ่าน `LOADER.show(text)` / `LOADER.busy(promise, text)` ครบ 100% |
+| **2.7 การเพิ่ม (Modal) & การแก้ไข (Modal)** | `✅ ทำไปแล้ว` | ใช้ `#appModal` (`openModal` / `closeModal`) สำหรับการเพิ่มและแก้ไขข้อมูลทุกเมนู | — |
+| **2.8 การลบ (Sweet Confirm) & การแจ้งเตือน (Sweet Alert) & การออกจากระบบ (Sweet Confirm)** | `✅ ทำไปแล้ว` | - การลบ: ใช้ `confirmAction` (`Swal.fire` warning ปุ่มสีแดง `#E53935`)<br>- การแจ้งเตือน: ใช้ `toast()`, `alertSuccess()`, `alertError()`<br>- การออกจากระบบ: `handleLogout()` เรียก `confirmAction('ยืนยันการออกจากระบบ', ...)` | — |
+| **2.9 ตกแต่งด้วย Badge, Table Overflow, `<div><canvas></div>`** | `✅ ทำไปแล้ว` | - Badge: `.badge`, `.chip`, `.soft`<br>- Table Overflow: `<div class="overflow-x-auto">` ครอบตาราง `.tbl` ทุกหน้า<br>- Chart.js: มี `<div><canvas id="chartOrgPersonnel"></canvas></div>` และ `<div><canvas id="chartPosTypes"></canvas></div>` | — |
+| **2.10 Theme Color (`#007B3E`, `#4EBA6F`) & พาเลตต์ 12 สี** | `✅ ทำไปแล้ว` | `portal.css` (L14–37) และ `portal-app.js` (`THEMEC`, `GRADC`) กำหนดสีหลัก `#007B3E`, `#4EBA6F` และพาเลตต์ครบทั้ง 12 สี (`#007B3E`, `#4EBA6F`, `#00838F`, `#8BC34A`, `#FFB300`, `#FF7043`, `#E53935`, `#4A148C`, `#C62828`, `#FB8C00`, `#FDD835`, `#0288D1`) | เพิ่ม CSS Variables สำหรับทั้ง 12 สีใน `portal.css` เพื่อให้เรียกใช้ได้ทั่วทั้งระบบ |
 
 ---
 
-## 4. ตารางพิกัดไฟล์และช่วงบรรทัดที่ต้องแก้ไข (`StartLine`–`EndLine`)
+### 1.3 ข้อกำหนดที่ 3: การแยกไฟล์แบบ OOP Modular (HTML 1 หน้า/ไฟล์ + JS แยกคลาสตามฟังก์ชัน) & ปรับปรุง `Wiki/Code_Map.md`
 
-| ลำดับ | ไฟล์เป้าหมาย | ช่วงบรรทัด | รายละเอียดการดำเนินการ |
-| :---: | :--- | :---: | :--- |
-| **1** | [`supabase/migrations/02_portal_rpc_and_seed.sql`](file:///d:/STB%20APP%20n2/supabase/migrations/02_portal_rpc_and_seed.sql#L745-L1812) & ฐานข้อมูลจริง Supabase | **745–1812** | 1) ปรับ `fn_get_dashboard_apps` ให้รองรับสิทธิ์การมองเห็นและสถานะ `ปิดปรับปรุง`<br>2) ปรับ `fn_save_user` ให้ลบสิทธิ์เมื่อส่ง `'NONE'`<br>3) ปรับ `fn_save_reference_data` & `fn_save_position_structure` โหมด `BATCH` ให้ป้องกันการบันทึกซ้ำภายใต้ `parent_value` เดียวกัน แต่ยอมให้ชื่อเดียวกันอยู่คนละ `parent_value` ได้ (เช่น `กลุ่มงานปฏิบัติการ` ของ ส่วนตรวจฯ 1, 2, 3)<br>4) เพิ่ม Seed ข้อมูลตัวอย่างกลุ่มงานภายใต้ ส่วนตรวจและบังคับการ 1, 2, 3 และหมวด `STATUS` บนฐานข้อมูลจริง |
-| **2** | [`WebApp/Portal-SSO/assets/js/portal-api.js`](file:///d:/STB%20APP%20n2/WebApp/Portal-SSO/assets/js/portal-api.js#L265-L316) | **265–316** | เพิ่ม `batchAddReference`, `batchAddPosition`, และ `saveSetting` ใน `PORTAL_API` |
-| **3** | [`WebApp/Portal-SSO/assets/js/portal-app.js`](file:///d:/STB%20APP%20n2/WebApp/Portal-SSO/assets/js/portal-app.js#L165-L1620) | **165–1620** | 1) ปรับ `getReferenceItems(type, parentValue)` ให้กรองตรงตาม `parentValue` อย่างเคร่งครัด + ตัดคำซ้ำ (`Deduplicate`) เสมอ<br>2) ปรับ `buildOptionsHtml` ให้ตัดคำซ้ำ 100%<br>3) ลบค่าคงที่ออกจาก `getPositionTypes()` และ `bindOrgAndPositionCascade()`<br>4) ปรับ `#dashboard` และ `#profile` ตาม Blueprint 100% |
-| **4** | [`WebApp/Portal-SSO/assets/js/portal-admin.js`](file:///d:/STB%20APP%20n2/WebApp/Portal-SSO/assets/js/portal-admin.js#L180-L2006) | **180–2006** | 1) ย้าย **คำนำหน้าชื่อ (`PREFIX`)** และ **สถานะ (`STATUS`)** มาไว้ใน `#positions`<br>2) ปรับ Modal เพิ่มข้อมูลใน `#reference` และ `#positions` ให้มีปุ่ม **`+ เพิ่มรายการ` (`addRow`)** เพิ่มช่อง `<input>` ได้หลายแถวพร้อมกันภายใต้สังกัดแม่ที่เลือก<br>3) เพิ่มตัวกรองตามสังกัดแม่ในตาราง `#reference`<br>4) เชื่อมโยง `#personnel`, `#users`, `#webapps`, และ `#settings` (13 Keys) ให้สมบูรณ์ 100% |
-| **5** | [`Wiki/Code_Map.md`](file:///d:/STB%20APP%20n2/Wiki/Code_Map.md) & [`Working/CURRENT_STATE.md`](file:///d:/STB%20APP%20n2/Working/CURRENT_STATE.md) | ทั้งไฟล์ | อัปเดตเลขบรรทัดและบันทึกสรุปสถาปัตยกรรมล่าสุด |
+| รายการตามคำสั่ง | สถานะปัจจุบัน | ปัญหาที่พบ | แผนการแก้ไข (`⏳`) |
+| :--- | :---: | :--- | :--- |
+| **3.1 แยกหน้าไฟล์ HTML (1 หน้าต่อ 1 ไฟล์)** | `⏳ ยังไม่ได้ทำ` | ปัจจุบัน HTML ของแต่ละหน้าถูกเขียนฝังรวมอยู่ในไฟล์ JS ขนาดใหญ่ | สร้างโฟลเดอร์ `WebApp/Portal-SSO/views/` แยก HTML ออกเป็น **10 ไฟล์ (1 หน้าต่อ 1 ไฟล์ รวม `loader.html`)** โหลดผ่านคลาส `PortalViewLoader` (พร้อม Memory Cache) |
+| **3.2 แยกไฟล์ JS แบบ OOP ตามฟังก์ชันการทำงาน** | `⏳ ยังไม่ได้ทำ` | `portal-app.js` ยาว **1,849 บรรทัด** และ `portal-admin.js` ยาว **2,332 บรรทัด** ทำให้เสีย Token จำนวนมากเวลาอ่าน/วิเคราะห์ | แยกไฟล์ JS ออกเป็นคลาส OOP ตามหน้าที่รับผิดชอบ เหลือไฟล์ละ **~110–430 บรรทัด** โดยคง `window.PORTAL_APP` และ `window.PORTAL_ADMIN` Facade เดิมไว้ 100% |
+| **3.3 ปรับแต่ง `Wiki/Code_Map.md` ให้เข้าถึงข้อมูลรวดเร็ว** | `⏳ ต้องอัปเดตตามไฟล์ใหม่` | พิกัดเดิมชี้ไปที่ไฟล์ใหญ่ 2 ไฟล์ | อัปเดต `Wiki/Code_Map.md` ให้มี **ตารางพิกัดรายฟังก์ชันของทุกไฟล์ย่อย** เพื่อให้อ่าน `Wiki/Code_Map.md` ก่อนแล้วใช้ `view_file` กระโดดไปยังบรรทัดเป้าหมายได้ทันทีโดยไม่ต้องอ่านตั้งแต่บรรทัดแรก |
 
 ---
 
-## 5. ขั้นตอนการดำเนินงานเมื่อกด Proceed
-1. **`coder` Subagent:** แก้ไข `02_portal_rpc_and_seed.sql`, `portal-api.js`, `portal-app.js`, และ `portal-admin.js` พร้อมรัน SQL อัปเดตบนฐานข้อมูลจริง Supabase
-2. **`reviewer` Subagent:** ตรวจเช็ค Syntax และทดสอบการเพิ่มกลุ่มงานชื่อซ้ำข้ามส่วนงาน (ส่วนตรวจและบังคับการ 1, 2, 3) + ตรวจสอบการตัดคำซ้ำใน Dropdown
-3. **`archivist` Subagent:** อัปเดต `Wiki/Code_Map.md`, `Working/CURRENT_STATE.md`, `Wiki/log.md` และ Push ขึ้น GitHub (`origin/main`)
+## 🏗️ ส่วนที่ 2: สถาปัตยกรรมการแยกไฟล์แบบ OOP (HTML 1 หน้า/ไฟล์ + JS Classes)
+
+### 2.1 โครงสร้างไฟล์ HTML แยกตามหน้า (`WebApp/Portal-SSO/views/` — 1 หน้าต่อ 1 ไฟล์)
+1. `WebApp/Portal-SSO/views/loader.html` — โครงสร้างและสไตล์ของ BMA 3D Logo Flip Loader (`ref_122wc/Loader.html` 100%: `.loader`, `.ld-mask`, `.ld-card`, `.ld-page`, `.ld-inline`, `.ld-bar`, `.ld-chip`)
+2. `WebApp/Portal-SSO/views/auth.html` — หน้าเข้าสู่ระบบ, ลืมรหัสผ่าน, และลงทะเบียนบุคลากรใหม่ 2 ขั้นตอน
+3. `WebApp/Portal-SSO/views/dashboard.html` — หน้าภาพรวมระบบ (4 Stat Cards + SSO WebApp Launchpad + กราฟ `<canvas>` 2 ชุด)
+4. `WebApp/Portal-SSO/views/profile.html` — หน้าข้อมูลส่วนตัวและรหัสผ่าน (ข้อมูลบุคลากร, เปลี่ยน Username 1 ครั้ง, อัปโหลดรูปและลายเซ็น)
+5. `WebApp/Portal-SSO/views/personnel.html` — หน้าทำเนียบบุคลากร (`#personnel`)
+6. `WebApp/Portal-SSO/views/users.html` — หน้าจัดการบัญชีผู้ใช้งานและสิทธิ์รายแอป (`#users`)
+7. `WebApp/Portal-SSO/views/webapps.html` — หน้าจัดการเว็บแอปพลิเคชันย่อย SSO (`#webapps`)
+8. `WebApp/Portal-SSO/views/reference.html` — หน้าโครงสร้างสังกัด 4 ระดับ (`#reference`)
+9. `WebApp/Portal-SSO/views/positions.html` — หน้าโครงสร้างตำแหน่ง & คำนำหน้าชื่อ (`#positions`)
+10. `WebApp/Portal-SSO/views/settings.html` — หน้าตั้งค่าระบบส่วนกลาง (`#settings`)
+
+---
+
+### 2.2 โครงสร้างการแยกไฟล์ JS แบบ OOP จัดกลุ่มตามฟังก์ชันการทำงาน (`WebApp/Portal-SSO/assets/js/`)
+
+> [!TIP]
+> **พิกัดต้นทางจาก `Wiki/Code_Map.md` สำหรับการแยกไฟล์ด้วย IDE Tools (ไม่ต้องอ่านตั้งแต่บรรทัดแรก):**
+> - **จาก `portal-app.js` (1,849 บรรทัด):**
+>   - `L1–117`: State, Theme Colors (`THEMEC`, `GRADC`), UI Atoms (`icons`, `esc`, `statCard`, `sectionBar`, `th`, `resolveDriveImg`) $\rightarrow$ แยกไป `assets/js/core/portal-state.js`
+>   - `L118–340`: Dynamic Structure & Deduplication Engine (`getReferenceItems`, `getPositionTypes`, `getPositionsByType`, `getLevelsByPosition`, `buildOptionsHtml`, `bindOrgAndPositionCascade`) $\rightarrow$ แยกไป `assets/js/core/portal-cascade.js`
+>   - `L341–560`: Theme, Branding (`applyBranding` + Footer Dynamic + `LOADER.saveBrand`), Modal & SweetAlert2 + `LOADER.page` / `LOADER.into` Wrapper $\rightarrow$ แยกไป `assets/js/core/portal-ui.js` และ `assets/js/core/portal-view-loader.js`
+>   - `L561–1160`: Auth Views (Login, Register 2 Steps, Forgot/Reset Password, Verify Email, `handleLogout` Sweet Confirm) $\rightarrow$ แยกไป `assets/js/modules/portal-auth.js`
+>   - `L1161–1400`: Dashboard View (4 Stat Cards, SSO Launchpad, Chart.js 2 กราฟ, `launchSubApp`) $\rightarrow$ แยกไป `assets/js/modules/portal-dashboard.js`
+>   - `L1401–1760`: Profile View (Masked ID Card, 1-Time Username Edit, Drive Photo/Signature Upload, Canvas Signature Pad) $\rightarrow$ แยกไป `assets/js/modules/portal-profile.js`
+>   - `L1761–1849`: Main Router & Public Facade (`window.PORTAL_APP`) $\rightarrow$ คงไว้ใน `assets/js/portal-app.js`
+> - **จาก `portal-admin.js` (2,332 บรรทัด):**
+>   - `L1–110`: Admin Shared State & Helpers $\rightarrow$ แยกไป `assets/js/admin/admin-shared.js`
+>   - `L111–560`: `#personnel` (`AdminPersonnel`) $\rightarrow$ แยกไป `assets/js/admin/admin-personnel.js`
+>   - `L561–980`: `#users` (`AdminUsers`) $\rightarrow$ แยกไป `assets/js/admin/admin-users.js`
+>   - `L981–1390`: `#webapps` (`AdminWebapps`) $\rightarrow$ แยกไป `assets/js/admin/admin-webapps.js`
+>   - `L1391–1728`: `#reference` (`AdminReference`) $\rightarrow$ แยกไป `assets/js/admin/admin-reference.js`
+>   - `L1729–2141`: `#positions` (`AdminPositions`) $\rightarrow$ แยกไป `assets/js/admin/admin-positions.js`
+>   - `L2142–2290`: `#settings` (`AdminSettings`) $\rightarrow$ แยกไป `assets/js/admin/admin-settings.js`
+>   - `L2291–2332`: Admin Route Registration & Public Facade (`window.PORTAL_ADMIN`) $\rightarrow$ คงไว้ใน `assets/js/portal-admin.js`
+
+---
+
+## 🛠️ ส่วนที่ 3: ขั้นตอนการดำเนินงานและกฎเหล็กการตรวจสอบ
+
+1. **บังคับใช้กฎ Map-First & IDE Tools 100%:**
+   - ทุก Subagent อ่านพิกัดจาก `Wiki/Code_Map.md` และตารางพิกัดในแผนนี้ก่อนใช้ `view_file` เสมอ (ห้ามเริ่มอ่านตั้งแต่บรรทัดที่ 1 เพื่อสแกนหาเอง และห้ามใช้ Node.js หรือ Terminal อ่าน/ตัดแบ่งไฟล์)
+2. **อัปเกรด `WebApp/shared/stb-loader.js` & `views/loader.html` ให้ตรงกับ `Loader.html` 100%:**
+   - รองรับ `LOADER.show`, `LOADER.hide`, `LOADER.text`, `LOADER.forceHide`, `LOADER.page`, `LOADER.into`, `LOADER.busy`, `LOADER.brandBoot`, `LOADER.saveBrand`, `LOADER.closeSplash` และฟังก์ชันกลาง `showLoad`, `hideLoad`, `loadText`, `skeleton()`, `loadInto()`
+3. **แยกไฟล์ HTML Views (10 ไฟล์) และ JS OOP Classes (16 ไฟล์) + ปรับปรุง Footer Fluid Width:**
+   - แยกไฟล์ตามพิกัดบรรทัดข้างต้นโดยไม่แก้ไขหรือตัดทอนตรรกะการทำงานเดิม
+4. **การตรวจสอบความถูกต้องหลังแยกไฟล์โดย Subagent (`inherit` / Argon):**
+   - ให้ Subagent (`Model: "inherit"`) ตรวจสอบยืนยันว่าทุกเมธอดใน `window.PORTAL_APP` และ `window.PORTAL_ADMIN` รวมถึงการทำงานทุกหน้าอยู่ครบถ้วน 100% ไม่มีการเปลี่ยนแปลงฟังก์ชันหรือตรรกะเดิม
+5. **อัปเดต `Wiki/Code_Map.md` และ `Working/CURRENT_STATE.md` (`archivist`):**
+   - บันทึกตารางพิกัดบรรทัดของไฟล์ย่อยทั้งหมดลงใน `Wiki/Code_Map.md` เพื่อให้การแก้ไขในอนาคตเปิดอ่านเฉพาะไฟล์ย่อยได้ทันที

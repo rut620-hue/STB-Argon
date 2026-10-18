@@ -1,0 +1,112 @@
+<!-- ============================================================
+     CENTRAL PORTAL & SSO — SETTINGS VIEW (views/settings.html)
+     ============================================================ -->
+<div id="settingsViewContainer">
+  <form id="admSettingsForm" onsubmit="event.preventDefault();" class="space-y-6">
+    <!-- Card 1: Branding & Identity -->
+    <div class="card p-5">
+      <div class="flex items-center gap-2 mb-3">
+        <i data-lucide="palette" class="w-4 h-4 accent"></i>
+        <h3 class="font-bold text-sm">1. อัตลักษณ์และแบรนด์ (Branding & Identity)</h3>
+      </div>
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <label class="lbl">ชื่อระบบที่แสดง (App_Display_Name)</label>
+          <input type="text" id="cfg_App_Display_Name" class="inp" placeholder="เช่น ระบบ Central Portal & SSO (สตบ.สนท.)">
+        </div>
+        <div>
+          <label class="lbl">URL พื้นฐานของระบบ (App_Base_Url)</label>
+          <input type="text" id="cfg_App_Base_Url" class="inp" placeholder="เช่น https://stb.bangkok.go.th/portal">
+        </div>
+        <div>
+          <label class="lbl">URL รูปภาพโลโก้หน้า Login (Login_Logo_URL)</label>
+          <input type="text" id="cfg_Login_Logo_URL" class="inp">
+        </div>
+        <div>
+          <label class="lbl">URL รูปภาพโลโก้บน Header/Dashboard (Dashboard_Logo_URL)</label>
+          <input type="text" id="cfg_Dashboard_Logo_URL" class="inp">
+        </div>
+        <div>
+          <label class="lbl">URL ภาพโปรไฟล์เริ่มต้น (Default_Profile_Picture_URL)</label>
+          <input type="text" id="cfg_Default_Profile_Picture_URL" class="inp">
+        </div>
+        <div>
+          <label class="lbl">ธีมเริ่มต้นของระบบ (Default_Theme)</label>
+          <select id="cfg_Default_Theme" class="inp">
+            <option value="light">โหมดกลางวัน (Light Mode)</option>
+            <option value="dark">โหมดกลางคืน (Dark Mode)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 2: Security Policies & Token Lifetimes -->
+    <div class="card p-5">
+      <div class="flex items-center gap-2 mb-3">
+        <i data-lucide="shield" class="w-4 h-4 accent"></i>
+        <h3 class="font-bold text-sm">2. ความปลอดภัยและอายุโทเค็น (Security Policies & Token Lifetimes)</h3>
+      </div>
+      <div class="grid md:grid-cols-3 gap-4">
+        <div>
+          <label class="lbl">อายุ Session เข้าสู่ระบบ (Session_Hours - ชั่วโมง)</label>
+          <input type="number" id="cfg_Session_Hours" class="inp" value="12">
+        </div>
+        <div>
+          <label class="lbl">อายุลิงก์ยืนยันอีเมล (Verify_Email_Hours - ชั่วโมง)</label>
+          <input type="number" id="cfg_Verify_Email_Hours" class="inp" value="24">
+        </div>
+        <div>
+          <label class="lbl">อายุโทเค็นรีเซ็ตรหัสผ่าน (Reset_Token_Minutes - นาที)</label>
+          <input type="number" id="cfg_Reset_Token_Minutes" class="inp" value="15">
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 3: Google Drive Folders -->
+    <div class="card p-5">
+      <div class="flex items-center gap-2 mb-3">
+        <i data-lucide="folder-git-2" class="w-4 h-4 accent"></i>
+        <h3 class="font-bold text-sm">3. โฟลเดอร์จัดเก็บไฟล์ Google Drive</h3>
+      </div>
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <label class="lbl">โฟลเดอร์รูปโปรไฟล์ผู้ใช้ (Profile_Folder_ID)</label>
+          <div class="flex gap-2">
+            <input type="text" id="cfg_Profile_Folder_ID" class="inp" placeholder="Folder ID จาก Google Drive">
+            <button type="button" class="btn-ghost shrink-0" onclick="PORTAL_ADMIN.testDriveFolder('cfg_Profile_Folder_ID', 'รูปโปรไฟล์')">
+              <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> ทดสอบ
+            </button>
+          </div>
+        </div>
+        <div>
+          <label class="lbl">โฟลเดอร์รูปลายเซ็นดิจิทัล (Signature_Folder_ID)</label>
+          <div class="flex gap-2">
+            <input type="text" id="cfg_Signature_Folder_ID" class="inp" placeholder="Folder ID จาก Google Drive">
+            <button type="button" class="btn-ghost shrink-0" onclick="PORTAL_ADMIN.testDriveFolder('cfg_Signature_Folder_ID', 'ลายเซ็น')">
+              <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> ทดสอบ
+            </button>
+          </div>
+        </div>
+        <div>
+          <label class="lbl">โฟลเดอร์รูปถ่ายบุคลากรทางการ (Personnel_Photo_Folder_ID)</label>
+          <div class="flex gap-2">
+            <input type="text" id="cfg_Personnel_Photo_Folder_ID" class="inp" placeholder="Folder ID จาก Google Drive">
+            <button type="button" class="btn-ghost shrink-0" onclick="PORTAL_ADMIN.testDriveFolder('cfg_Personnel_Photo_Folder_ID', 'รูปบุคลากร')">
+              <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> ทดสอบ
+            </button>
+          </div>
+        </div>
+        <div>
+          <label class="lbl">โฟลเดอร์ไอคอนเว็บแอปย่อย (App_Icon_Folder_ID)</label>
+          <div class="flex gap-2">
+            <input type="text" id="cfg_App_Icon_Folder_ID" class="inp" placeholder="Folder ID จาก Google Drive">
+            <button type="button" class="btn-ghost shrink-0" onclick="PORTAL_ADMIN.testDriveFolder('cfg_App_Icon_Folder_ID', 'ไอคอนเว็บแอป')">
+              <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> ทดสอบ
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+

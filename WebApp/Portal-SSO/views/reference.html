@@ -1,0 +1,35 @@
+<!-- ============================================================
+     CENTRAL PORTAL & SSO — REFERENCE DATA VIEW (views/reference.html)
+     ============================================================ -->
+<div id="referenceViewContainer">
+  <!-- 4-Bureau Tabs Navigation -->
+  <div class="flex gap-1.5 p-1 rounded-2xl bg-slate-100 dark:bg-slate-800 mb-4 max-w-fit overflow-x-auto" id="refTabsNav">
+    <button type="button" onclick="PORTAL_ADMIN.switchRefTab('BUREAU')" class="px-3.5 py-1.5 rounded-xl text-xs font-semibold transition" data-reftab="BUREAU">1. สำนัก</button>
+    <button type="button" onclick="PORTAL_ADMIN.switchRefTab('OFFICE')" class="px-3.5 py-1.5 rounded-xl text-xs font-semibold transition" data-reftab="OFFICE">2. สำนักงาน/กอง</button>
+    <button type="button" onclick="PORTAL_ADMIN.switchRefTab('DEPARTMENT')" class="px-3.5 py-1.5 rounded-xl text-xs font-semibold transition" data-reftab="DEPARTMENT">3. ส่วน/ฝ่าย</button>
+    <button type="button" onclick="PORTAL_ADMIN.switchRefTab('DIVISION')" class="px-3.5 py-1.5 rounded-xl text-xs font-semibold transition" data-reftab="DIVISION">4. กลุ่มงาน</button>
+  </div>
+
+  <!-- Parent Constraint Filter Container -->
+  <div id="refParentFilterBox"></div>
+
+  <!-- Reference Data Table -->
+  <div class="card overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="tbl min-w-[760px]" id="referenceTable">
+        <thead>
+          <tr>
+            <th style="width:54px;" class="text-center">ลำดับ</th>
+            <th style="width:220px;">ค่าข้อมูล (Value)</th>
+            <th style="width:116px;">ชื่อย่อ (Short Name)</th>
+            <th style="width:200px;">สังกัดแม่ (Parent)</th>
+            <th style="width:116px;" class="text-center">เลื่อนลำดับ</th>
+            <th style="width:116px;" class="text-right">จัดการ</th>
+          </tr>
+        </thead>
+        <tbody id="referenceTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+

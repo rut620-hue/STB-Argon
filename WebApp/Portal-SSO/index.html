@@ -161,7 +161,7 @@
         <footer class="w-full footer-bar px-4 md:px-6 py-4 text-center">
           <p class="text-xs muted"><span id="ftSys">Central Portal & Single Sign-On</span> · <span id="ftOrg" class="font-semibold accent">ส่วนตรวจและบังคับการ สำนักเทศกิจ</span></p>
           <p class="text-[10px] muted mt-1 opacity-80 leading-relaxed">
-            © 2570 สงวนลิขสิทธิ์ โดย ฝ่ายบริหารงานทั่วไป ส่วนตรวจและบังคับการ สำนักเทศกิจ กรุงเทพมหานคร
+            © <span id="ftYear">2570</span> สงวนลิขสิทธิ์ โดย ฝ่ายบริหารงานทั่วไป ส่วนตรวจและบังคับการ สำนักเทศกิจ กรุงเทพมหานคร
           </p>
         </footer>
       </div>
@@ -186,12 +186,34 @@
     </div>
   </div>
 
-  <!-- Shared & Portal Scripts -->
+  <!-- Shared & Portal SDK Scripts -->
   <script src="assets/js/portal-config.js"></script>
   <script src="../shared/stb-loader.js"></script>
   <script src="../shared/stb-drive-upload.js"></script>
   <script src="../shared/stb-sso-guard.js"></script>
   <script src="assets/js/portal-api.js"></script>
+
+  <!-- Core Modules -->
+  <script src="assets/js/core/portal-state.js"></script>
+  <script src="assets/js/core/portal-view-loader.js"></script>
+  <script src="assets/js/core/portal-ui.js"></script>
+  <script src="assets/js/core/portal-cascade.js"></script>
+
+  <!-- Feature Modules -->
+  <script src="assets/js/modules/portal-auth.js"></script>
+  <script src="assets/js/modules/portal-dashboard.js"></script>
+  <script src="assets/js/modules/portal-profile.js"></script>
+
+  <!-- Admin Modules -->
+  <script src="assets/js/admin/admin-shared.js"></script>
+  <script src="assets/js/admin/admin-personnel.js"></script>
+  <script src="assets/js/admin/admin-users.js"></script>
+  <script src="assets/js/admin/admin-webapps.js"></script>
+  <script src="assets/js/admin/admin-reference.js"></script>
+  <script src="assets/js/admin/admin-positions.js"></script>
+  <script src="assets/js/admin/admin-settings.js"></script>
+
+  <!-- Facade Controllers -->
   <script src="assets/js/portal-app.js"></script>
   <script src="assets/js/portal-admin.js"></script>
 </body>

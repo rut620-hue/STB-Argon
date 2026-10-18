@@ -1,0 +1,181 @@
+<!-- ============================================================
+     CENTRAL PORTAL & SSO — AUTH VIEWS (views/auth.html)
+     ============================================================ -->
+<div id="authViewContainer">
+  <!-- 1. Login Form Template -->
+  <template id="tmplLoginForm">
+    <div>
+      <div class="mb-5">
+        <span class="badge chip mb-2"><i data-lucide="lock" class="w-3.5 h-3.5"></i> Single Sign-On Portal</span>
+        <h2 class="text-2xl font-bold">เข้าสู่ระบบ</h2>
+        <p class="text-sm muted mt-1">กรุณากรอกบัญชีผู้ใช้งานของท่านเพื่อเข้าสู่ระบบส่วนกลาง</p>
+      </div>
+      <form id="loginForm" onsubmit="PORTAL_APP.submitLogin(event)" class="space-y-4">
+        <div>
+          <label class="lbl">ชื่อผู้ใช้งาน หรือ อีเมล</label>
+          <div class="relative">
+            <i data-lucide="user" class="w-4 h-4 absolute left-3 top-3.5 muted"></i>
+            <input id="loginUsername" class="inp pl-9" placeholder="username หรือ email" required autocomplete="username">
+          </div>
+        </div>
+        <div>
+          <label class="lbl">รหัสผ่าน</label>
+          <div class="relative">
+            <i data-lucide="lock" class="w-4 h-4 absolute left-3 top-3.5 muted"></i>
+            <input id="loginPassword" type="password" class="inp pl-9 pr-10" placeholder="••••••••" required autocomplete="current-password">
+            <button type="button" onclick="PORTAL_APP.togglePasswordVisibility('loginPassword')" class="absolute right-3 top-3 muted hover:text-slate-700">
+              <i data-lucide="eye" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+        <div class="flex justify-end">
+          <a href="javascript:void(0)" onclick="PORTAL_APP.renderForgotPasswordForm()" class="text-xs font-semibold accent hover:underline inline-flex items-center gap-1">
+            <i data-lucide="key-round" class="w-3.5 h-3.5"></i> ลืมรหัสผ่าน?
+          </a>
+        </div>
+        <button type="submit" class="btn-primary w-full !py-3 !text-base">
+          <i data-lucide="log-in" class="w-4 h-4"></i> เข้าสู่ระบบ
+        </button>
+      </form>
+      <div id="loginRegisterPrompt" class="mt-5 pt-4 text-center text-xs muted" style="border-top:1px solid var(--border)">
+        ยังไม่มีบัญชีผู้ใช้งานใช่หรือไม่?
+        <a href="javascript:void(0)" onclick="PORTAL_APP.startRegisterWizard()" class="font-bold accent hover:underline">ลงทะเบียนผู้ใช้งานใหม่</a>
+      </div>
+    </div>
+  </template>
+
+  <!-- 2. Register Wizard Steps -->
+  <template id="tmplRegStep1">
+    <div>
+      <div class="flex gap-2 mb-4">
+        <span class="badge chip">1. ตรวจบัตร 13 หลัก</span>
+        <span class="badge soft">2. ข้อมูลบุคลากร</span>
+        <span class="badge soft">3. ตั้งค่าบัญชี</span>
+      </div>
+      <h2 class="text-xl font-bold mb-1">ขั้นตอนที่ 1: ตรวจสอบเลขบัตรประชาชน</h2>
+      <p class="text-xs muted mb-4">ระบบจะตรวจสอบสูตร Modulo-11 และค้นหาประวัติเดิมในทำเนียบบุคลากร</p>
+      <form onsubmit="PORTAL_APP.submitRegStep1(event)" class="space-y-4">
+        <div>
+          <label class="lbl">เลขประจำตัวประชาชน (13 หลัก) *</label>
+          <input id="regIdCardInput" type="text" maxlength="13" class="inp" placeholder="ระบุตัวเลข 13 หลัก" required>
+        </div>
+        <div class="flex gap-2">
+          <button type="button" class="btn-ghost" onclick="PORTAL_APP.renderLoginForm()"><i data-lucide="arrow-left" class="w-4 h-4"></i> กลับ</button>
+          <button type="submit" class="btn-primary flex-1 justify-center">ตรวจสอบ <i data-lucide="arrow-right" class="w-4 h-4"></i></button>
+        </div>
+      </form>
+    </div>
+  </template>
+
+  <template id="tmplRegStep2">
+    <div>
+      <div class="flex gap-2 mb-4">
+        <span class="badge soft">1. ตรวจบัตร 13 หลัก</span>
+        <span class="badge chip">2. ข้อมูลบุคลากร</span>
+        <span class="badge soft">3. ตั้งค่าบัญชี</span>
+      </div>
+      <h2 class="text-xl font-bold mb-1">ขั้นตอนที่ 2: ข้อมูลบุคลากร</h2>
+      <p class="text-xs muted mb-3">กรุณากรอกข้อมูลพื้นฐานเพื่อสร้างทะเบียนบุคลากร</p>
+      <form onsubmit="PORTAL_APP.submitRegStep2(event)" class="space-y-3">
+        <div class="grid grid-cols-3 gap-2">
+          <div><label class="lbl">คำนำหน้า *</label><select id="reg_prefix" class="inp" required></select></div>
+          <div><label class="lbl">ชื่อ *</label><input id="reg_first_name" class="inp" required></div>
+          <div><label class="lbl">นามสกุล *</label><input id="reg_last_name" class="inp" required></div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div><label class="lbl">ประเภทตำแหน่ง *</label><select id="reg_position_type" class="inp" required></select></div>
+          <div><label class="lbl">สายงาน/ตำแหน่ง *</label><select id="reg_position" class="inp" required></select></div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div><label class="lbl">ระดับตำแหน่ง</label><select id="reg_position_level" class="inp"></select></div>
+          <div><label class="lbl">สำนัก *</label><select id="reg_bureau_name" class="inp" required></select></div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div><label class="lbl">สำนักงาน/กอง *</label><select id="reg_office" class="inp" required></select></div>
+          <div><label class="lbl">ส่วน/ฝ่าย *</label><select id="reg_department" class="inp" required></select></div>
+        </div>
+        <div>
+          <label class="lbl">กลุ่มงาน (ถ้ามี)</label><select id="reg_division" class="inp"></select>
+        </div>
+        <div class="flex gap-2 pt-2">
+          <button type="button" class="btn-ghost" onclick="PORTAL_APP.backRegStep(1)"><i data-lucide="arrow-left" class="w-4 h-4"></i> ย้อนกลับ</button>
+          <button type="submit" class="btn-primary flex-1 justify-center">ถัดไป <i data-lucide="arrow-right" class="w-4 h-4"></i></button>
+        </div>
+      </form>
+    </div>
+  </template>
+
+  <template id="tmplRegStep3">
+    <div>
+      <div class="flex gap-2 mb-4">
+        <span class="badge soft">1. ตรวจบัตร 13 หลัก</span>
+        <span class="badge soft">2. ข้อมูลบุคลากร</span>
+        <span class="badge chip">3. ตั้งค่าบัญชี</span>
+      </div>
+      <h2 class="text-xl font-bold mb-1">ขั้นตอนที่ 3: ตั้งค่าบัญชีและรหัสผ่าน</h2>
+      <p class="text-xs muted mb-3">กำหนดชื่อผู้ใช้งาน อีเมล และรหัสผ่านเพื่อเข้าใช้งาน</p>
+      <form onsubmit="PORTAL_APP.submitRegStep3(event)" class="space-y-3">
+        <div><label class="lbl">ชื่อผู้ใช้งาน (Username) *</label><input id="reg_username" class="inp" placeholder="ภาษาอังกฤษ ตัวเลข 4-20 ตัว" required autocomplete="username"></div>
+        <div><label class="lbl">อีเมล (Email) *</label><input id="reg_email" type="email" class="inp" placeholder="user@bangkok.go.th" required autocomplete="email"></div>
+        <div class="grid grid-cols-2 gap-2">
+          <div><label class="lbl">รหัสผ่าน (Password) *</label><input id="reg_password" type="password" minlength="8" class="inp" placeholder="อย่างน้อย 8 ตัวอักษร" required autocomplete="new-password"></div>
+          <div><label class="lbl">ยืนยันรหัสผ่าน *</label><input id="reg_password_confirm" type="password" minlength="8" class="inp" placeholder="ระบุซ้ำอีกครั้ง" required autocomplete="new-password"></div>
+        </div>
+        <div class="flex gap-2 pt-2">
+          <button type="button" class="btn-ghost" id="regBackToStepBtn" onclick="PORTAL_APP.backRegStep(2)"><i data-lucide="arrow-left" class="w-4 h-4"></i> ย้อนกลับ</button>
+          <button type="submit" class="btn-primary flex-1 justify-center"><i data-lucide="user-check" class="w-4 h-4"></i> ยืนยันการลงทะเบียน</button>
+        </div>
+      </form>
+    </div>
+  </template>
+
+  <!-- 3. Forgot & Reset Password -->
+  <template id="tmplForgotPassword">
+    <div>
+      <div class="mb-4">
+        <h2 class="text-xl font-bold">ขอรีเซ็ตรหัสผ่าน</h2>
+        <p class="text-xs muted mt-1">ระบุอีเมลที่ใช้ลงทะเบียน ระบบจะส่งลิงก์ตั้งรหัสผ่านใหม่ไปยังอีเมลของท่าน</p>
+      </div>
+      <form onsubmit="PORTAL_APP.submitForgotPassword(event)" class="space-y-4">
+        <div>
+          <label class="lbl">อีเมล (Email) *</label>
+          <div class="relative">
+            <i data-lucide="mail" class="w-4 h-4 absolute left-3 top-3.5 muted"></i>
+            <input id="forgotEmailInput" type="email" class="inp pl-9" placeholder="user@bangkok.go.th" required autocomplete="email">
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <button type="button" class="btn-ghost" onclick="PORTAL_APP.renderLoginForm()"><i data-lucide="arrow-left" class="w-4 h-4"></i> กลับ</button>
+          <button type="submit" class="btn-primary flex-1 justify-center"><i data-lucide="send" class="w-4 h-4"></i> ส่งลิงก์ตั้งรหัสผ่าน</button>
+        </div>
+      </form>
+    </div>
+  </template>
+
+  <template id="tmplResetPassword">
+    <div>
+      <h2 class="text-xl font-bold mb-1">กำหนดรหัสผ่านใหม่</h2>
+      <p class="text-xs muted mb-4">กรุณากำหนดรหัสผ่านใหม่อย่างน้อย 8 ตัวอักษร</p>
+      <form id="resetPasswordForm" class="space-y-4">
+        <div><label class="lbl">รหัสผ่านใหม่ *</label><input id="newResetPw1" type="password" minlength="8" class="inp" required></div>
+        <div><label class="lbl">ยืนยันรหัสผ่านใหม่ *</label><input id="newResetPw2" type="password" minlength="8" class="inp" required></div>
+        <button type="submit" class="btn-primary w-full !py-2.5 justify-center"><i data-lucide="check" class="w-4 h-4"></i> บันทึกรหัสผ่านใหม่</button>
+      </form>
+    </div>
+  </template>
+
+  <!-- 4. Notices & Errors -->
+  <template id="tmplMissingKey">
+    <div class="text-center py-6">
+      <div class="w-16 h-16 rounded-2xl bg-amber-500/15 text-amber-500 inline-flex items-center justify-center mb-4">
+        <i data-lucide="key" class="w-8 h-8"></i>
+      </div>
+      <h2 class="text-xl font-bold mb-2">ตั้งค่าการเชื่อมต่อฐานข้อมูลครั้งแรก</h2>
+      <p class="text-sm muted mb-6">กรุณาระบุ <b>Supabase Anon Public Key</b> เพื่อเริ่มใช้งานระบบ Central Portal & SSO</p>
+      <button type="button" class="btn-primary" onclick="PORTAL_APP.openConnectionConfigModal(true)">
+        <i data-lucide="plug" class="w-4 h-4"></i> ตั้งค่า Supabase Anon Key
+      </button>
+    </div>
+  </template>
+</div>
+

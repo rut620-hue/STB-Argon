@@ -1,0 +1,55 @@
+<!-- ============================================================
+     CENTRAL PORTAL & SSO — DASHBOARD VIEW (views/dashboard.html)
+     ============================================================ -->
+<div id="dashboardViewContainer">
+  <!-- 4 Stat Cards Row -->
+  <div id="dashStatsRow" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6"></div>
+
+  <!-- SSO Subapp Launchpad Section -->
+  <div class="card p-5 mb-6">
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+      <div class="flex items-center gap-2">
+        <div class="w-9 h-9 rounded-xl chip flex items-center justify-center shrink-0">
+          <i data-lucide="rocket" class="w-4 h-4"></i>
+        </div>
+        <div>
+          <h2 class="font-bold text-base">ระบบงานย่อยที่เชื่อมต่อ Single Sign-On (SSO)</h2>
+          <p class="text-[11px] muted">คลิกเพื่อเข้าสู่ระบบย่อยโดยไม่ต้องล็อกอินซ้ำ</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 flex-wrap">
+        <div id="dashAdminPills" class="flex items-center gap-2"></div>
+        <button type="button" class="btn-ghost !py-1 !text-xs" onclick="PORTAL_APP.renderDashboardPage()">
+          <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> รีเฟรช
+        </button>
+      </div>
+    </div>
+    <!-- Webapps Grid Container -->
+    <div id="dashAppGrid" class="app-grid"></div>
+  </div>
+
+  <!-- Chart.js Visualizations (Personnel by Position Type & Personnel by Department) -->
+  <div class="grid md:grid-cols-2 gap-4">
+    <div class="card p-5">
+      <div class="flex items-center gap-2 mb-1">
+        <i data-lucide="pie-chart" class="w-4 h-4 accent"></i>
+        <h3 class="font-bold text-sm">สัดส่วนบุคลากรแยกตามประเภทตำแหน่ง</h3>
+      </div>
+      <p class="text-[11px] muted mb-3">จำแนกตามประเภทบุคลากรในทำเนียบ</p>
+      <div class="relative h-64">
+        <canvas id="chPosType"></canvas>
+      </div>
+    </div>
+    <div class="card p-5">
+      <div class="flex items-center gap-2 mb-1">
+        <i data-lucide="bar-chart-2" class="w-4 h-4 accent"></i>
+        <h3 class="font-bold text-sm">จำนวนบุคลากรแยกตามส่วน/ฝ่าย</h3>
+      </div>
+      <p class="text-[11px] muted mb-3">จำแนกตามโครงสร้างส่วนราชการ</p>
+      <div class="relative h-64">
+        <canvas id="chDept"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+

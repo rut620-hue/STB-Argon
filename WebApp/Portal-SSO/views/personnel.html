@@ -1,0 +1,42 @@
+<!-- ============================================================
+     CENTRAL PORTAL & SSO — PERSONNEL VIEW (views/personnel.html)
+     ============================================================ -->
+<div id="personnelViewContainer">
+  <!-- Filter & Actions Bar -->
+  <div class="card p-3 mb-4">
+    <div class="flex flex-wrap gap-3 items-center justify-between">
+      <div class="flex flex-wrap gap-2 items-center flex-1 max-w-xl">
+        <div class="relative flex-1 min-w-[220px]">
+          <i data-lucide="search" class="w-4 h-4 absolute left-3 top-3 muted"></i>
+          <input type="text" id="personnelSearchInput" class="inp pl-9 !py-1.5 text-xs" placeholder="ค้นหาชื่อ, เลขบัตร, ตำแหน่ง, สังกัด...">
+        </div>
+        <select id="personnelStatusSelect" class="inp !py-1.5 !w-auto text-xs">
+          <option value="">-- ทุกสถานะ --</option>
+        </select>
+      </div>
+      <div class="text-xs muted" id="personnelCounterTx">แสดงข้อมูลบุคลากร</div>
+    </div>
+  </div>
+
+  <!-- Personnel Table -->
+  <div class="card overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="tbl min-w-[1000px]" id="personnelTable">
+        <thead>
+          <tr>
+            <th style="width:54px;">#</th>
+            <th style="width:58px;">รูปถ่าย</th>
+            <th style="width:220px;">ชื่อ-นามสกุล / เลขประจำตัว</th>
+            <th style="width:180px;">ตำแหน่ง / สายงาน</th>
+            <th style="width:200px;">สังกัด / หน่วยงาน</th>
+            <th style="width:140px;">บัญชีผู้ใช้</th>
+            <th style="width:110px;">สถานะ</th>
+            <th style="width:116px;" class="text-right">จัดการ</th>
+          </tr>
+        </thead>
+        <tbody id="personnelTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
