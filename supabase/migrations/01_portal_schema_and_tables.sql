@@ -187,3 +187,4 @@ CREATE INDEX IF NOT EXISTS idx_perms_app ON portal.permissions (webapp_id);
 GRANT ALL ON ALL TABLES IN SCHEMA portal TO anon, authenticated, service_role;
 GRANT ALL ON ALL SEQUENCES IN SCHEMA portal TO anon, authenticated, service_role;
 GRANT ALL ON ALL ROUTINES IN SCHEMA portal TO anon, authenticated, service_role;
+

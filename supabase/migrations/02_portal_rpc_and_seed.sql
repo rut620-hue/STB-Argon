@@ -1915,3 +1915,4 @@ GRANT ALL ON ALL TABLES IN SCHEMA portal TO anon, authenticated, service_role;
 GRANT ALL ON ALL SEQUENCES IN SCHEMA portal TO anon, authenticated, service_role;
 GRANT ALL ON ALL ROUTINES IN SCHEMA portal TO anon, authenticated, service_role;
 NOTIFY pgrst, 'reload config';
+

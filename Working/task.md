@@ -11,11 +11,11 @@
   - [x] สร้าง `supabase/migrations/01_portal_schema_and_tables.sql` (ครบ 8 ตาราง 68 คอลัมน์)
   - [x] สร้าง `supabase/migrations/02_portal_rpc_and_seed.sql` (ครบทุก RPC + First-Time Setup Bypass + `fn_reset_test_data`)
   - [x] รัน Migration เข้า Supabase จริงและทดสอบ RPC สำเร็จ (`is_setup_mode: true`, 13 Settings, 20 Reference Data, 37 Positions)
-- [ ] **🔵 เฟส 1B: GAS Microservice + Shared SDK + 3D Loader (`Loader.html`) + ธีมสีเขียว กทม. & ฟอนต์หลัก `Sarabun`** *(เฟสถัดไป)*
-  - [ ] พัฒนาและ Deploy `gas/รหัส.js` & `gas/appsscript.json` (อัปโหลดไฟล์เข้า Google Drive + ส่งอีเมล)
-  - [ ] สร้าง `shared/stb-loader.js`, `shared/stb-sso-guard.js`, `shared/stb-drive-upload.js`
-  - [ ] สร้าง `assets/css/portal.css` (ฟอนต์หลัก `Sarabun` จาก Google Fonts + Light/Dark Mode)
-- [ ] **🟡 เฟส 1C: หน้าเว็บ Central Portal SPA (ส่วนที่ 1: โครงสร้างหลัก, First-Time Setup Bypass, Auth, Dashboard & Profile)**
+- [x] **🔵 เฟส 1B: GAS Microservice + Shared SDK + 3D Loader (`Loader.html`) + ธีมสีเขียว กทม. & ฟอนต์หลัก `Sarabun`** *(เสร็จสมบูรณ์ 100%)*
+  - [x] พัฒนาและ Deploy `gas/รหัส.js` & `gas/appsscript.json` (`clasp push` & `clasp deploy @1`)
+  - [x] สร้าง `shared/stb-loader.js`, `shared/stb-sso-guard.js`, `shared/stb-drive-upload.js`
+  - [x] สร้าง `assets/css/portal.css` (ฟอนต์หลัก `Sarabun` จาก Google Fonts + Light/Dark Mode)
+- [ ] **🟡 เฟส 1C: หน้าเว็บ Central Portal SPA (ส่วนที่ 1: โครงสร้างหลัก, First-Time Setup Bypass, Auth, Dashboard & Profile)** *(เฟสถัดไป)*
   - [ ] สร้าง `index.html`, `assets/js/portal-config.js`, `assets/js/portal-api.js`
   - [ ] สร้าง `assets/js/portal-app.js` (ส่วนที่ 1: Login/Setup Bypass, Register 3 ขั้นตอน, Dashboard การ์ดแอป SSO, Profile & วาดลายเซ็น)
 - [ ] **🟣 เฟส 1D: หน้าเว็บ Central Portal SPA (ส่วนที่ 2: ระบบจัดการ Admin/Superadmin & แอปย่อยตัวอย่าง)**
