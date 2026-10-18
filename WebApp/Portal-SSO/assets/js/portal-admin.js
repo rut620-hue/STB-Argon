@@ -29,7 +29,7 @@
     personnelStatusFilter: '',
     usersSearch: '',
     usersRoleFilter: '',
-    currentRefTab: 'PREFIX',
+    currentRefTab: 'BUREAU',
     currentRefParentFilter: '',
     currentPosTab: 'ผู้บริหาร'
   };
@@ -184,6 +184,9 @@
       });
     }
 
+    var statuses = app.getReferenceItems('STATUS').map(function (x) { return x.value; });
+    if (statuses.length === 0) statuses = ['ทำงานอยู่', 'ไปช่วยราชการ', 'ช่วยราชการที่อื่น', 'ลาศึกษาต่อ', 'เกษียณอายุ', 'ลาออก', 'ให้ออก/ไล่ออก'];
+
     var toolsHtml = ''
       + '<button type="button" class="btn-ghost" onclick="PORTAL_ADMIN.refreshPersonnel()"><i data-lucide="refresh-cw" class="w-4 h-4"></i> รีเฟรช</button>'
       + '<button type="button" class="btn-primary" onclick="PORTAL_ADMIN.openPersonnelModal()"><i data-lucide="user-plus" class="w-4 h-4"></i> เพิ่มบุคลากร</button>';
@@ -200,9 +203,9 @@
       + '      </div>'
       + '      <select id="personnelStatusSelect" class="inp !py-1.5 !w-auto text-xs">'
       + '        <option value="">-- ทุกสถานะ --</option>'
-      + '        <option value="ทำงานอยู่"' + (sStatus === 'ทำงานอยู่' ? ' selected' : '') + '>ทำงานอยู่</option>'
-      + '        <option value="ช่วยราชการ"' + (sStatus === 'ช่วยราชการ' ? ' selected' : '') + '>ช่วยราชการ</option>'
-      + '        <option value="พ้นสภาพ"' + (sStatus === 'พ้นสภาพ' ? ' selected' : '') + '>พ้นสภาพ</option>'
+      + statuses.map(function (st) {
+          return '<option value="' + esc(st) + '"' + (sStatus === st ? ' selected' : '') + '>' + esc(st) + '</option>';
+        }).join('')
       + '      </select>'
       + '    </div>'
       + '    <div class="text-xs muted">แสดง <b>' + filtered.length + '</b> จาก ' + (ADMIN_STATE.personnel || []).length + ' คน</div>'
@@ -264,8 +267,13 @@
 
     var prefixes = app.getReferenceItems('PREFIX').map(function (x) { return x.value; });
     var bureaus = app.getReferenceItems('BUREAU').map(function (x) { return x.value; });
-    if (bureaus.length === 0) bureaus = ['สำนักเทศกิจ'];
+    var statuses = app.getReferenceItems('STATUS').map(function (x) { return x.value; });
+    if (statuses.length === 0) statuses = ['ทำงานอยู่', 'ไปช่วยราชการ', 'ช่วยราชการที่อื่น', 'ลาศึกษาต่อ', 'เกษียณอายุ', 'ลาออก', 'ให้ออก/ไล่ออก'];
     var posTypes = app.getPositionTypes();
+
+    var defBureau = p.bureau_name || (bureaus.length > 0 ? bureaus[0] : '');
+    var defPosType = p.position_type || (posTypes.length > 0 ? posTypes[0] : '');
+    var defStatus = p.status || (statuses.length > 0 ? statuses[0] : 'ทำงานอยู่');
 
     var photoPreview = resolveDriveImg(p.photo_url, 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png');
     var signPreview = resolveDriveImg(p.signature_url, '');
@@ -284,21 +292,19 @@
       + '    <div><label class="lbl">เลขประจำตัวประชาชน (13 หลัก) *</label><input type="text" id="adm_p_id_card" maxlength="13" class="inp" value="' + esc(p.id_card_number || '') + '"' + (isEdit ? ' readonly style="background:var(--surface2);"' : ' required') + '></div>'
       + '    <div><label class="lbl">สถานะการทำงาน *</label>'
       + '      <select id="adm_p_status" class="inp" required>'
-      + '        <option value="ทำงานอยู่"' + (p.status === 'ทำงานอยู่' || !p.status ? ' selected' : '') + '>ทำงานอยู่</option>'
-      + '        <option value="ช่วยราชการ"' + (p.status === 'ช่วยราชการ' ? ' selected' : '') + '>ช่วยราชการ</option>'
-      + '        <option value="พ้นสภาพ"' + (p.status === 'พ้นสภาพ' ? ' selected' : '') + '>พ้นสภาพ</option>'
+      + app.buildOptionsHtml(statuses, defStatus, '-- เลือกสถานะ --')
       + '      </select>'
       + '    </div>'
       + '  </div>'
       + '  <div class="p-3.5 rounded-xl soft space-y-3">'
       + '    <div class="font-bold text-xs muted uppercase tracking-wider flex items-center gap-1.5"><i data-lucide="briefcase" class="w-3.5 h-3.5 accent"></i> ตำแหน่งและโครงสร้างหน่วยงาน</div>'
       + '    <div class="grid grid-cols-3 gap-3">'
-      + '      <div><label class="lbl">ประเภทตำแหน่ง</label><select id="adm_p_position_type" class="inp">' + app.buildOptionsHtml(posTypes, p.position_type || 'ประเภททั่วไป') + '</select></div>'
+      + '      <div><label class="lbl">ประเภทตำแหน่ง</label><select id="adm_p_position_type" class="inp">' + app.buildOptionsHtml(posTypes, defPosType, '-- เลือกประเภทตำแหน่ง --') + '</select></div>'
       + '      <div><label class="lbl">สายงาน/ตำแหน่ง *</label><select id="adm_p_position" class="inp" required></select></div>'
       + '      <div><label class="lbl">ระดับตำแหน่ง</label><select id="adm_p_position_level" class="inp"></select></div>'
       + '    </div>'
       + '    <div class="grid grid-cols-3 gap-3">'
-      + '      <div><label class="lbl">สำนัก</label><select id="adm_p_bureau_name" class="inp">' + app.buildOptionsHtml(bureaus, p.bureau_name || 'สำนักเทศกิจ') + '</select></div>'
+      + '      <div><label class="lbl">สำนัก</label><select id="adm_p_bureau_name" class="inp">' + app.buildOptionsHtml(bureaus, defBureau, '-- เลือกสำนัก --') + '</select></div>'
       + '      <div><label class="lbl">สำนักงาน/กอง *</label><select id="adm_p_office" class="inp" required></select></div>'
       + '      <div><label class="lbl">ฝ่าย/ส่วน *</label><select id="adm_p_department" class="inp" required></select></div>'
       + '    </div>'
@@ -745,6 +751,8 @@
       var lvl = document.getElementById('perm_lvl_' + w.webapp_id);
       if (chk && chk.checked) {
         permissions[w.webapp_id] = lvl ? lvl.value : 'USER';
+      } else {
+        permissions[w.webapp_id] = 'NONE';
       }
     });
 
@@ -822,9 +830,11 @@
     if (!pageBody) return;
 
     var rowsHtml = '';
-    var list = ADMIN_STATE.webapps || [];
+    var list = (ADMIN_STATE.webapps || []).slice().sort(function (a, b) {
+      return (a.sort_order || 0) - (b.sort_order || 0);
+    });
     if (list.length === 0) {
-      rowsHtml = '<tr><td colspan="7" class="text-center py-10 muted"><i data-lucide="layers" class="w-8 h-8 mx-auto mb-2 opacity-50"></i><div class="text-sm">ยังไม่มีเว็บแอปพลิเคชันในระบบ</div></td></tr>';
+      rowsHtml = '<tr><td colspan="8" class="text-center py-10 muted"><i data-lucide="layers" class="w-8 h-8 mx-auto mb-2 opacity-50"></i><div class="text-sm">ยังไม่มีเว็บแอปพลิเคชันในระบบ</div></td></tr>';
     } else {
       list.forEach(function (w, idx) {
         var iconHtml = '';
@@ -836,9 +846,9 @@
           iconHtml = '<i data-lucide="layers" class="w-6 h-6 text-green-600 mx-auto"></i>';
         }
 
-        var statusChip = (w.status === 'เปิดใช้งาน')
-          ? '<span class="badge chip">เปิดใช้งาน</span>'
-          : '<span class="badge" style="background:rgba(229,57,53,.15);color:var(--red);">ปิดปรับปรุง</span>';
+        var statusChip = (w.status === 'เปิดใช้งาน' || w.status === 'ACTIVE')
+          ? '<span class="badge chip cursor-pointer hover:opacity-80 transition" onclick="PORTAL_ADMIN.toggleWebappStatus(\'' + esc(w.webapp_id) + '\')" title="คลิกเพื่อสลับสถานะ">เปิดใช้งาน</span>'
+          : '<span class="badge cursor-pointer hover:opacity-80 transition" style="background:rgba(229,57,53,.15);color:var(--red);" onclick="PORTAL_ADMIN.toggleWebappStatus(\'' + esc(w.webapp_id) + '\')" title="คลิกเพื่อสลับสถานะ">ปิดปรับปรุง</span>';
 
         rowsHtml += ''
           + '<tr>'
@@ -851,6 +861,12 @@
           + '  </td>'
           + '  <td><a href="' + esc(w.url) + '" target="_blank" class="lnk">' + esc(w.url) + '</a></td>'
           + '  <td>' + statusChip + '</td>'
+          + '  <td class="text-center">'
+          + '    <div class="inline-flex gap-1">'
+          + '      <button type="button" class="btn-ghost !p-1" onclick="PORTAL_ADMIN.moveWebapp(\'' + esc(w.webapp_id) + '\', \'up\')" title="เลื่อนขึ้น"><i data-lucide="arrow-up" class="w-3.5 h-3.5"></i></button>'
+          + '      <button type="button" class="btn-ghost !p-1" onclick="PORTAL_ADMIN.moveWebapp(\'' + esc(w.webapp_id) + '\', \'down\')" title="เลื่อนลง"><i data-lucide="arrow-down" class="w-3.5 h-3.5"></i></button>'
+          + '    </div>'
+          + '  </td>'
           + '  <td class="text-right">'
           + '    <div class="inline-flex gap-1">'
           + '      <button type="button" class="btn-ghost !p-1.5" onclick="PORTAL_APP.launchSubApp(\'' + esc(w.webapp_id) + '\')" title="ทดสอบเปิดแอปผ่าน SSO"><i data-lucide="external-link" class="w-3.5 h-3.5 text-blue-500"></i></button>'
@@ -871,7 +887,7 @@
     var tableHtml = ''
       + '<div class="card overflow-hidden">'
       + '  <div class="overflow-x-auto">'
-      + '    <table class="tbl min-w-[900px]">'
+      + '    <table class="tbl min-w-[950px]">'
       + '      <thead>'
       + '        <tr>'
       + app.th('ลำดับ', 'no')
@@ -880,6 +896,7 @@
       + app.th('ชื่อเว็บแอปพลิเคชัน / รายละเอียด', 'name')
       + app.th('URL ปลายทาง', 'unit')
       + app.th('สถานะ', 'status')
+      + app.th('เลื่อนลำดับ', 'action')
       + app.th('จัดการ', 'action')
       + '        </tr>'
       + '      </thead>'
@@ -1012,20 +1029,65 @@
     }
   }
 
+  async function moveWebapp(webappId, direction) {
+    var list = (ADMIN_STATE.webapps || []).slice().sort(function (a, b) {
+      return (a.sort_order || 0) - (b.sort_order || 0);
+    });
+    var idx = list.findIndex(function (w) { return w.webapp_id === webappId; });
+    if (idx === -1) return;
+    var targetIdx = (direction === 'up' || direction === 'UP') ? idx - 1 : idx + 1;
+    if (targetIdx < 0 || targetIdx >= list.length) return;
+
+    var itemA = list[idx];
+    var itemB = list[targetIdx];
+    var sortA = itemA.sort_order || (idx + 1);
+    var sortB = itemB.sort_order || (targetIdx + 1);
+    if (sortA === sortB) {
+      sortA = idx + 1;
+      sortB = targetIdx + 1;
+    }
+
+    try {
+      await getApi().saveWebapp({ webapp_id: itemA.webapp_id, sort_order: sortB });
+      await getApi().saveWebapp({ webapp_id: itemB.webapp_id, sort_order: sortA });
+      itemA.sort_order = sortB;
+      itemB.sort_order = sortA;
+      await loadWebappsData(true);
+      renderWebappsPage();
+      toast('ปรับลำดับเว็บแอปสำเร็จ');
+    } catch (e) {
+      alertError('ปรับลำดับเว็บแอปไม่สำเร็จ: ' + e.message);
+    }
+  }
+
+  async function toggleWebappStatus(webappId) {
+    var item = (ADMIN_STATE.webapps || []).find(function (w) { return w.webapp_id === webappId; });
+    if (!item) return;
+    var newStatus = (item.status === 'เปิดใช้งาน' || item.status === 'ACTIVE') ? 'ปิดปรับปรุง' : 'เปิดใช้งาน';
+    try {
+      await getApi().saveWebapp({ webapp_id: item.webapp_id, status: newStatus });
+      item.status = newStatus;
+      await loadWebappsData(true);
+      renderWebappsPage();
+      toast('เปลี่ยนสถานะเป็น "' + newStatus + '" สำเร็จ');
+    } catch (e) {
+      alertError('เปลี่ยนสถานะไม่สำเร็จ: ' + e.message);
+    }
+  }
+
   // ===========================================================================
   // 4. โมดูลโครงสร้างสังกัด & ข้อมูลอ้างอิง (#reference)
   // ===========================================================================
   function renderReferencePage() {
     var app = getApp();
     if (!app) return;
-    app.setPageHeader('โครงสร้างสังกัด & คำนำหน้า', 'จัดการข้อมูลอ้างอิง สังกัด 4 ระดับ (สำนัก, สำนักงาน, ฝ่าย, กลุ่มงาน) และคำนำหน้าชื่อ เลื่อนลำดับ และเพิ่มแบบกลุ่ม', 'network');
+    app.setPageHeader('โครงสร้างสังกัด 4 ระดับ', 'จัดการข้อมูลอ้างอิง โครงสร้างสังกัด 4 ระดับ (สำนัก, สำนักงาน/กอง, ส่วน/ฝ่าย, กลุ่มงาน) เลื่อนลำดับ และเพิ่มแบบหลายแถว', 'network');
 
     var pageBody = getPageBody();
     if (!pageBody) return;
 
-    var curTab = ADMIN_STATE.currentRefTab || 'PREFIX';
+    var curTab = ADMIN_STATE.currentRefTab || 'BUREAU';
     var tabs = [
-      { id: 'PREFIX', label: 'คำนำหน้าชื่อ' },
       { id: 'BUREAU', label: '1. สำนัก' },
       { id: 'OFFICE', label: '2. สำนักงาน/กอง' },
       { id: 'DEPARTMENT', label: '3. ส่วน/ฝ่าย' },
@@ -1100,10 +1162,9 @@
     }
 
     var toolsHtml = ''
-      + '<button type="button" class="btn-ghost" onclick="PORTAL_ADMIN.openBatchReferenceModal(\'' + curTab + '\')"><i data-lucide="file-plus" class="w-4 h-4"></i> เพิ่มแบบกลุ่ม</button>'
-      + '<button type="button" class="btn-primary" onclick="PORTAL_ADMIN.openSingleReferenceModal()"><i data-lucide="plus" class="w-4 h-4"></i> เพิ่มรายการเดี่ยว</button>';
+      + '<button type="button" class="btn-primary" onclick="PORTAL_ADMIN.openAddReferenceModal(\'' + curTab + '\')"><i data-lucide="plus" class="w-4 h-4"></i> เพิ่มข้อมูล (' + esc(curTab) + ')</button>';
 
-    var sectionHeader = app.sectionBar('โครงสร้างสังกัด & คำนำหน้าชื่อ (Reference Structure)', toolsHtml, 'network');
+    var sectionHeader = app.sectionBar('โครงสร้างสังกัด 4 ระดับ (BMA Organization Structure)', toolsHtml, 'network');
 
     var filterCard = parentFilterHtml
       ? '<div class="card p-3 mb-4">' + parentFilterHtml + '</div>'
@@ -1146,8 +1207,9 @@
   async function moveReference(referenceId, direction) {
     var app = getApp();
     if (!app) return;
-    var curTab = ADMIN_STATE.currentRefTab;
-    var parentVal = ADMIN_STATE.currentRefParentFilter;
+    var isPosRef = (ADMIN_STATE.currentPosTab === 'PREFIX' || ADMIN_STATE.currentPosTab === 'STATUS');
+    var curTab = isPosRef ? ADMIN_STATE.currentPosTab : ADMIN_STATE.currentRefTab;
+    var parentVal = isPosRef ? '' : ADMIN_STATE.currentRefParentFilter;
 
     var list = (app.STATE.referenceData || []).filter(function (r) {
       if (r.type !== curTab) return false;
@@ -1159,7 +1221,7 @@
 
     var idx = list.findIndex(function (x) { return x.reference_id === referenceId; });
     if (idx === -1) return;
-    var targetIdx = (direction === 'UP') ? idx - 1 : idx + 1;
+    var targetIdx = (direction === 'UP' || direction === 'up') ? idx - 1 : idx + 1;
     if (targetIdx < 0 || targetIdx >= list.length) return;
 
     var itemA = list[idx];
@@ -1178,7 +1240,11 @@
 
       itemA.sort_order = sortB;
       itemB.sort_order = sortA;
-      renderReferencePage();
+      if (isPosRef) {
+        renderPositionsPage();
+      } else {
+        renderReferencePage();
+      }
       toast('ปรับลำดับเรียบร้อย');
     } catch (e) {
       alertError('ปรับลำดับไม่สำเร็จ: ' + e.message);
@@ -1245,9 +1311,10 @@
     }
 
     var parentValEl = document.getElementById('adm_ref_parent_val');
+    var type = document.getElementById('adm_ref_type').value;
     var payload = {
       reference_id: (document.getElementById('adm_ref_id').value || '').trim(),
-      type: document.getElementById('adm_ref_type').value,
+      type: type,
       value: val,
       short_name: (document.getElementById('adm_ref_short').value || '').trim(),
       parent_type: document.getElementById('adm_ref_parent_type').value,
@@ -1263,79 +1330,158 @@
       var bootRes = await getApi().checkSystemInit(true);
       if (bootRes && bootRes.reference_data) {
         getApp().STATE.referenceData = bootRes.reference_data;
+        ADMIN_STATE.referenceData = bootRes.reference_data;
       }
-      renderReferencePage();
+      if (type === 'PREFIX' || type === 'STATUS') {
+        renderPositionsPage();
+      } else {
+        renderReferencePage();
+      }
     } catch (err) {
       alertError(err.message || 'บันทึกข้อมูลไม่สำเร็จ');
     }
   }
 
-  function openBatchReferenceModal(currentType) {
+  function openAddReferenceModal(currentType) {
     var app = getApp();
     if (!app) return;
-    var type = currentType || ADMIN_STATE.currentRefTab;
+    var type = currentType || ADMIN_STATE.currentRefTab || 'BUREAU';
 
     var parentType = '';
     var parentOptionsHtml = '';
+    var parentVal = ADMIN_STATE.currentRefParentFilter || '';
+
     if (type === 'OFFICE') {
       parentType = 'BUREAU';
       var bureaus = (app.STATE.referenceData || []).filter(function (x) { return x.type === 'BUREAU'; });
-      parentOptionsHtml = '<div><label class="lbl">สังกัดสำนักแม่ (BUREAU)</label><select id="adm_batch_ref_parent" class="inp">' + bureaus.map(function (b) { return '<option value="' + esc(b.value) + '">' + esc(b.value) + '</option>'; }).join('') + '</select></div>';
+      parentOptionsHtml = '<div class="mb-3"><label class="lbl">สังกัดสำนักแม่ (BUREAU) *</label><select id="adm_add_ref_parent" class="inp" required>'
+        + bureaus.map(function (b) { return '<option value="' + esc(b.value) + '"' + (parentVal === b.value ? ' selected' : '') + '>' + esc(b.value) + '</option>'; }).join('')
+        + '</select></div>';
     } else if (type === 'DEPARTMENT') {
       parentType = 'OFFICE';
       var offices = (app.STATE.referenceData || []).filter(function (x) { return x.type === 'OFFICE'; });
-      parentOptionsHtml = '<div><label class="lbl">สังกัดสำนักงานแม่ (OFFICE)</label><select id="adm_batch_ref_parent" class="inp">' + offices.map(function (o) { return '<option value="' + esc(o.value) + '">' + esc(o.value) + '</option>'; }).join('') + '</select></div>';
+      parentOptionsHtml = '<div class="mb-3"><label class="lbl">สังกัดสำนักงานแม่ (OFFICE) *</label><select id="adm_add_ref_parent" class="inp" required>'
+        + offices.map(function (o) { return '<option value="' + esc(o.value) + '"' + (parentVal === o.value ? ' selected' : '') + '>' + esc(o.value) + '</option>'; }).join('')
+        + '</select></div>';
     } else if (type === 'DIVISION') {
       parentType = 'DEPARTMENT';
       var depts = (app.STATE.referenceData || []).filter(function (x) { return x.type === 'DEPARTMENT'; });
-      parentOptionsHtml = '<div><label class="lbl">สังกัดฝ่ายแม่ (DEPARTMENT)</label><select id="adm_batch_ref_parent" class="inp">' + depts.map(function (d) { return '<option value="' + esc(d.value) + '">' + esc(d.value) + '</option>'; }).join('') + '</select></div>';
+      parentOptionsHtml = '<div class="mb-3"><label class="lbl">สังกัดฝ่ายแม่ (DEPARTMENT) *</label><select id="adm_add_ref_parent" class="inp" required>'
+        + depts.map(function (d) { return '<option value="' + esc(d.value) + '"' + (parentVal === d.value ? ' selected' : '') + '>' + esc(d.value) + '</option>'; }).join('')
+        + '</select></div>';
     }
 
-    var title = 'เพิ่มข้อมูลอ้างอิงแบบกลุ่ม (Batch Add: ' + esc(type) + ')';
+    var typeLabels = {
+      'BUREAU': 'สำนัก (BUREAU)',
+      'OFFICE': 'สำนักงาน / กอง (OFFICE)',
+      'DEPARTMENT': 'ส่วน / ฝ่าย (DEPARTMENT)',
+      'DIVISION': 'กลุ่มงาน (DIVISION)',
+      'PREFIX': 'คำนำหน้าชื่อ (PREFIX)',
+      'STATUS': 'สถานะการทำงาน (STATUS)'
+    };
+    var labelText = typeLabels[type] || type;
+    var title = 'เพิ่มข้อมูลโครงสร้างสังกัด / อ้างอิง (' + esc(labelText) + ')';
 
     var bodyHtml = ''
-      + '<form id="admBatchRefForm" onsubmit="event.preventDefault();" class="space-y-4">'
-      + '  <input type="hidden" id="adm_batch_ref_type" value="' + esc(type) + '">'
-      + '  <input type="hidden" id="adm_batch_ref_parent_type" value="' + esc(parentType) + '">'
+      + '<form id="admAddRefForm" onsubmit="event.preventDefault();" class="space-y-4">'
+      + '  <input type="hidden" id="adm_add_ref_type" value="' + esc(type) + '">'
+      + '  <input type="hidden" id="adm_add_ref_parent_type" value="' + esc(parentType) + '">'
       + (parentOptionsHtml || '')
       + '  <div>'
-      + '    <label class="lbl">รายการข้อมูล (วาง 1 บรรทัด ต่อ 1 รายการ) *</label>'
-      + '    <p class="text-xs muted mb-1.5">สามารถระบุชื่อย่อคั่นด้วยเครื่องหมายจุลภาค <code>,</code> เช่น <code>ฝ่ายตรวจและบังคับการ 1, ฝตบ.1</code></p>'
-      + '    <textarea id="adm_batch_ref_lines" class="inp" rows="8" placeholder="ฝ่ายตรวจและบังคับการ 1&#10;ฝ่ายตรวจและบังคับการ 2&#10;ฝ่ายตรวจและบังคับการ 3"></textarea>'
+      + '    <div class="flex items-center justify-between mb-2">'
+      + '      <label class="lbl !mb-0 font-bold">รายการข้อมูลที่ต้องการเพิ่ม (เพิ่มได้หลายแถวพร้อมกัน)</label>'
+      + '      <button type="button" class="btn-ghost !py-1 !px-2.5 text-xs text-[#007B3E] font-bold" onclick="PORTAL_ADMIN.addReferenceInputRow()">'
+      + '        <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> + เพิ่มแถว'
+      + '      </button>'
+      + '    </div>'
+      + '    <div class="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-xl max-h-[340px] overflow-y-auto">'
+      + '      <table class="tbl w-full text-xs">'
+      + '        <thead>'
+      + '          <tr>'
+      + '            <th style="width:36px;" class="text-center">#</th>'
+      + '            <th>ค่าข้อมูล (ชื่อเต็ม) *</th>'
+      + '            <th style="width:150px;">ชื่อย่อ (Short Name)</th>'
+      + '            <th style="width:40px;" class="text-center">ลบ</th>'
+      + '          </tr>'
+      + '        </thead>'
+      + '        <tbody id="adm_ref_rows_body">'
+      + '        </tbody>'
+      + '      </table>'
+      + '    </div>'
       + '  </div>'
       + '</form>';
 
     var footerHtml = ''
       + '<button type="button" class="btn-ghost" onclick="PORTAL_APP.closeModal()">ยกเลิก</button>'
-      + '<button type="button" class="btn-primary" onclick="PORTAL_ADMIN.submitBatchReferenceModal()"><i data-lucide="plus-circle" class="w-4 h-4"></i> เพิ่มข้อมูลทั้งหมด</button>';
+      + '<button type="button" class="btn-primary" onclick="PORTAL_ADMIN.submitAddReferenceModal()"><i data-lucide="save" class="w-4 h-4"></i> บันทึกข้อมูลทั้งหมด</button>';
 
-    app.openModal(title, bodyHtml, footerHtml, '580px', 'file-plus');
+    app.openModal(title, bodyHtml, footerHtml, '650px', 'plus-circle');
+    addReferenceInputRow();
+    addReferenceInputRow();
+    addReferenceInputRow();
     triggerIcons();
   }
 
-  async function submitBatchReferenceModal() {
-    var linesStr = (document.getElementById('adm_batch_ref_lines').value || '').trim();
-    if (!linesStr) {
-      alertError('กรุณาระบุรายการข้อมูลอย่างน้อย 1 บรรทัด');
+  function addReferenceInputRow(val, short) {
+    var tbody = document.getElementById('adm_ref_rows_body');
+    if (!tbody) return;
+    var rowCount = tbody.querySelectorAll('tr').length + 1;
+    var tr = document.createElement('tr');
+    tr.className = 'ref-input-row';
+    tr.innerHTML = ''
+      + '<td class="text-center font-bold muted row-idx">' + rowCount + '</td>'
+      + '<td><input type="text" class="inp !py-1 !text-xs ref-row-val" placeholder="ระบุชื่อข้อมูล..." value="' + esc(val || '') + '"></td>'
+      + '<td><input type="text" class="inp !py-1 !text-xs ref-row-short" placeholder="ชื่อย่อ (ถ้ามี)" value="' + esc(short || '') + '"></td>'
+      + '<td class="text-center"><button type="button" class="btn-ghost !p-1 text-red-500 hover:text-red-700" onclick="PORTAL_ADMIN.removeReferenceInputRow(this)" title="ลบแถวนี้"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button></td>';
+    tbody.appendChild(tr);
+    triggerIcons();
+  }
+
+  function removeReferenceInputRow(btn) {
+    var tbody = document.getElementById('adm_ref_rows_body');
+    if (!tbody) return;
+    var tr = btn.closest('tr');
+    if (tr) tr.remove();
+    var rows = tbody.querySelectorAll('tr');
+    rows.forEach(function (r, idx) {
+      var idxCell = r.querySelector('.row-idx');
+      if (idxCell) idxCell.textContent = String(idx + 1);
+    });
+    if (rows.length === 0) {
+      addReferenceInputRow();
+    }
+  }
+
+  async function submitAddReferenceModal() {
+    var tbody = document.getElementById('adm_ref_rows_body');
+    if (!tbody) return;
+
+    var type = document.getElementById('adm_add_ref_type').value;
+    var parentType = document.getElementById('adm_add_ref_parent_type').value;
+    var parentEl = document.getElementById('adm_add_ref_parent');
+    var parentVal = parentEl ? parentEl.value.trim() : '';
+
+    if (parentType && !parentVal) {
+      alertError('กรุณาเลือกสังกัดแม่ (' + parentType + ')');
       return;
     }
 
-    var type = document.getElementById('adm_batch_ref_type').value;
-    var parentType = document.getElementById('adm_batch_ref_parent_type').value;
-    var parentValEl = document.getElementById('adm_batch_ref_parent');
-    var parentVal = parentValEl ? parentValEl.value : '';
-
-    var lines = linesStr.split('\n');
+    var rows = tbody.querySelectorAll('.ref-input-row');
     var items = [];
-    lines.forEach(function (line) {
-      var trimmed = line.trim();
-      if (!trimmed) return;
-      var parts = trimmed.split(',');
-      items.push({
-        value: parts[0].trim(),
-        short_name: parts[1] ? parts[1].trim() : ''
-      });
+    rows.forEach(function (r) {
+      var valInp = r.querySelector('.ref-row-val');
+      var shortInp = r.querySelector('.ref-row-short');
+      var val = (valInp && valInp.value) ? valInp.value.trim() : '';
+      var short = (shortInp && shortInp.value) ? shortInp.value.trim() : '';
+      if (val) {
+        items.push({ value: val, short_name: short });
+      }
     });
+
+    if (items.length === 0) {
+      alertError('กรุณาระบุค่าข้อมูลอย่างน้อย 1 แถว');
+      return;
+    }
 
     try {
       var res = await getApi().batchAddReference({
@@ -1344,17 +1490,27 @@
         parent_value: parentVal,
         items: items
       });
-      toast(res.message || 'เพิ่มข้อมูลอ้างอิงแบบกลุ่มสำเร็จ');
+      toast(res.message || 'บันทึกข้อมูลเรียบร้อยแล้ว');
       getApp().closeModal();
 
       var bootRes = await getApi().checkSystemInit(true);
       if (bootRes && bootRes.reference_data) {
         getApp().STATE.referenceData = bootRes.reference_data;
+        ADMIN_STATE.referenceData = bootRes.reference_data;
       }
-      renderReferencePage();
+
+      if (type === 'PREFIX' || type === 'STATUS') {
+        renderPositionsPage();
+      } else {
+        renderReferencePage();
+      }
     } catch (err) {
-      alertError(err.message || 'ไม่สามารถเพิ่มข้อมูลแบบกลุ่มได้');
+      alertError(err.message || 'บันทึกข้อมูลไม่สำเร็จ');
     }
+  }
+
+  function openBatchReferenceModal(currentType) {
+    openAddReferenceModal(currentType);
   }
 
   async function deleteReference(referenceId, value) {
@@ -1373,8 +1529,13 @@
       var bootRes = await getApi().checkSystemInit(true);
       if (bootRes && bootRes.reference_data) {
         getApp().STATE.referenceData = bootRes.reference_data;
+        ADMIN_STATE.referenceData = bootRes.reference_data;
       }
-      renderReferencePage();
+      if (ADMIN_STATE.currentPosTab === 'PREFIX' || ADMIN_STATE.currentPosTab === 'STATUS') {
+        renderPositionsPage();
+      } else {
+        renderReferencePage();
+      }
     } catch (err) {
       alertError(err.message || 'ไม่สามารถลบข้อมูลได้');
     }
@@ -1386,72 +1547,139 @@
   function renderPositionsPage() {
     var app = getApp();
     if (!app) return;
-    app.setPageHeader('โครงสร้างสายงานและตำแหน่ง', 'กำหนดประเภทตำแหน่ง 6 ประเภทของกรุงเทพมหานคร สายงาน ระดับตำแหน่ง เลื่อนลำดับ และเพิ่มแบบกลุ่ม', 'layers');
+    app.setPageHeader('โครงสร้างสายงานและตำแหน่ง', 'กำหนดประเภทตำแหน่ง สายงาน ระดับตำแหน่ง และคำนำหน้าชื่อ/สถานะการทำงาน', 'layers');
 
     var pageBody = getPageBody();
     if (!pageBody) return;
 
     var curType = ADMIN_STATE.currentPosTab || 'ผู้บริหาร';
     var posTypes = app.getPositionTypes();
+    var tabs = [
+      { id: 'PREFIX', label: 'คำนำหน้าชื่อ', isRef: true },
+      { id: 'STATUS', label: 'สถานะการทำงาน', isRef: true }
+    ].concat(posTypes.map(function (t) { return { id: t, label: t, isRef: false }; }));
+
+    // Ensure valid active tab
+    var hasTab = tabs.some(function (t) { return t.id === curType; });
+    if (!hasTab && tabs.length > 0) {
+      curType = tabs[0].id;
+      ADMIN_STATE.currentPosTab = curType;
+    }
 
     var tabButtonsHtml = '<div class="flex gap-1.5 p-1 rounded-2xl bg-slate-100 dark:bg-slate-800 mb-4 max-w-fit overflow-x-auto">';
-    posTypes.forEach(function (t) {
-      var isActive = t === curType;
-      tabButtonsHtml += '<button type="button" onclick="PORTAL_ADMIN.switchPosTab(\'' + t + '\')" class="px-3.5 py-1.5 rounded-xl text-xs font-semibold transition ' + (isActive ? 'bg-[#007B3E] text-white shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900') + '">' + esc(t) + '</button>';
+    tabs.forEach(function (t) {
+      var isActive = t.id === curType;
+      tabButtonsHtml += '<button type="button" onclick="PORTAL_ADMIN.switchPosTab(\'' + esc(t.id) + '\')" class="px-3.5 py-1.5 rounded-xl text-xs font-semibold transition ' + (isActive ? 'bg-[#007B3E] text-white shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900') + '">' + esc(t.label) + '</button>';
     });
     tabButtonsHtml += '</div>';
 
-    var items = (app.STATE.positionStructure || []).filter(function (p) {
-      return p.position_type === curType;
-    }).sort(function (a, b) {
-      return (a.sort_order || 0) - (b.sort_order || 0);
-    });
-
     var rowsHtml = '';
-    if (items.length === 0) {
-      rowsHtml = '<tr><td colspan="5" class="text-center py-10 muted"><i data-lucide="inbox" class="w-8 h-8 mx-auto mb-2 opacity-50"></i><div class="text-sm">ไม่มีข้อมูลตำแหน่งในประเภทนี้</div></td></tr>';
-    } else {
-      items.forEach(function (p, idx) {
-        rowsHtml += ''
-          + '<tr>'
-          + '  <td class="text-center font-bold muted">' + (idx + 1) + '</td>'
-          + '  <td><span class="font-bold text-slate-800 dark:text-slate-100">' + esc(p.position_name) + '</span></td>'
-          + '  <td>' + (p.position_level ? '<span class="badge chip">' + esc(p.position_level) + '</span>' : '<span class="text-xs muted">-</span>') + '</td>'
-          + '  <td class="text-center">'
-          + '    <div class="inline-flex gap-1">'
-          + '      <button type="button" class="btn-ghost !p-1" onclick="PORTAL_ADMIN.movePosition(\'' + esc(p.position_id) + '\', \'UP\')" title="เลื่อนขึ้น"><i data-lucide="arrow-up" class="w-3.5 h-3.5"></i></button>'
-          + '      <button type="button" class="btn-ghost !p-1" onclick="PORTAL_ADMIN.movePosition(\'' + esc(p.position_id) + '\', \'DOWN\')" title="เลื่อนลง"><i data-lucide="arrow-down" class="w-3.5 h-3.5"></i></button>'
-          + '    </div>'
-          + '  </td>'
-          + '  <td class="text-right">'
-          + '    <div class="inline-flex gap-1">'
-          + '      <button type="button" class="btn-ghost !p-1.5" onclick="PORTAL_ADMIN.openSinglePositionModal(\'' + esc(p.position_id) + '\')" title="แก้ไข"><i data-lucide="pencil" class="w-3.5 h-3.5 text-amber-500"></i></button>'
-          + '      <button type="button" class="btn-ghost !p-1.5" onclick="PORTAL_ADMIN.deletePosition(\'' + esc(p.position_id) + '\', \'' + esc(p.position_name) + '\')" title="ลบ"><i data-lucide="trash-2" class="w-3.5 h-3.5 text-red-500"></i></button>'
-          + '    </div>'
-          + '  </td>'
-          + '</tr>';
+    var tableHeadersHtml = '';
+    var toolsHtml = '';
+    var sectionBarTitle = '';
+
+    if (curType === 'PREFIX' || curType === 'STATUS') {
+      var isPrefix = (curType === 'PREFIX');
+      var refLabel = isPrefix ? 'คำนำหน้าชื่อ' : 'สถานะการทำงาน';
+      sectionBarTitle = 'ข้อมูลอ้างอิง: ' + refLabel + ' (' + curType + ')';
+
+      var refItems = (app.STATE.referenceData || []).filter(function (r) {
+        return r.type === curType;
+      }).sort(function (a, b) {
+        return (a.sort_order || 0) - (b.sort_order || 0);
       });
+
+      if (refItems.length === 0) {
+        rowsHtml = '<tr><td colspan="5" class="text-center py-10 muted"><i data-lucide="inbox" class="w-8 h-8 mx-auto mb-2 opacity-50"></i><div class="text-sm">ไม่มีข้อมูลในหมวดนี้</div></td></tr>';
+      } else {
+        refItems.forEach(function (r, idx) {
+          rowsHtml += ''
+            + '<tr>'
+            + '  <td class="text-center font-bold muted">' + (idx + 1) + '</td>'
+            + '  <td><span class="font-bold text-slate-800 dark:text-slate-100">' + esc(r.value) + '</span></td>'
+            + '  <td class="text-xs muted">' + esc(r.short_name || '-') + '</td>'
+            + '  <td class="text-center">'
+            + '    <div class="inline-flex gap-1">'
+            + '      <button type="button" class="btn-ghost !p-1" onclick="PORTAL_ADMIN.moveReference(\'' + esc(r.reference_id) + '\', \'UP\')" title="เลื่อนขึ้น"><i data-lucide="arrow-up" class="w-3.5 h-3.5"></i></button>'
+            + '      <button type="button" class="btn-ghost !p-1" onclick="PORTAL_ADMIN.moveReference(\'' + esc(r.reference_id) + '\', \'DOWN\')" title="เลื่อนลง"><i data-lucide="arrow-down" class="w-3.5 h-3.5"></i></button>'
+            + '    </div>'
+            + '  </td>'
+            + '  <td class="text-right">'
+            + '    <div class="inline-flex gap-1">'
+            + '      <button type="button" class="btn-ghost !p-1.5" onclick="PORTAL_ADMIN.openSingleReferenceModal(\'' + esc(r.reference_id) + '\')" title="แก้ไข"><i data-lucide="pencil" class="w-3.5 h-3.5 text-amber-500"></i></button>'
+            + '      <button type="button" class="btn-ghost !p-1.5" onclick="PORTAL_ADMIN.deleteReference(\'' + esc(r.reference_id) + '\', \'' + esc(r.value) + '\')" title="ลบ"><i data-lucide="trash-2" class="w-3.5 h-3.5 text-red-500"></i></button>'
+            + '    </div>'
+            + '  </td>'
+            + '</tr>';
+        });
+      }
+
+      tableHeadersHtml = ''
+        + '<tr>'
+        + app.th('ลำดับ', 'no')
+        + app.th(isPrefix ? 'คำนำหน้าชื่อ' : 'สถานะการทำงาน', 'name')
+        + app.th('ชื่อย่อ (Short Name)', 'action')
+        + app.th('เลื่อนลำดับ', 'action')
+        + app.th('จัดการ', 'action')
+        + '</tr>';
+
+      toolsHtml = '<button type="button" class="btn-primary" onclick="PORTAL_ADMIN.openAddReferenceModal(\'' + curType + '\')"><i data-lucide="plus" class="w-4 h-4"></i> เพิ่ม' + refLabel + '</button>';
+
+    } else {
+      sectionBarTitle = 'โครงสร้างสายงานและระดับตำแหน่ง (' + esc(curType) + ')';
+
+      var posItems = (app.STATE.positionStructure || []).filter(function (p) {
+        return p.position_type === curType;
+      }).sort(function (a, b) {
+        return (a.sort_order || 0) - (b.sort_order || 0);
+      });
+
+      if (posItems.length === 0) {
+        rowsHtml = '<tr><td colspan="5" class="text-center py-10 muted"><i data-lucide="inbox" class="w-8 h-8 mx-auto mb-2 opacity-50"></i><div class="text-sm">ไม่มีข้อมูลตำแหน่งในประเภทนี้</div></td></tr>';
+      } else {
+        posItems.forEach(function (p, idx) {
+          rowsHtml += ''
+            + '<tr>'
+            + '  <td class="text-center font-bold muted">' + (idx + 1) + '</td>'
+            + '  <td><span class="font-bold text-slate-800 dark:text-slate-100">' + esc(p.position_name) + '</span></td>'
+            + '  <td>' + (p.position_level ? '<span class="badge chip">' + esc(p.position_level) + '</span>' : '<span class="text-xs muted">-</span>') + '</td>'
+            + '  <td class="text-center">'
+            + '    <div class="inline-flex gap-1">'
+            + '      <button type="button" class="btn-ghost !p-1" onclick="PORTAL_ADMIN.movePosition(\'' + esc(p.position_id) + '\', \'UP\')" title="เลื่อนขึ้น"><i data-lucide="arrow-up" class="w-3.5 h-3.5"></i></button>'
+            + '      <button type="button" class="btn-ghost !p-1" onclick="PORTAL_ADMIN.movePosition(\'' + esc(p.position_id) + '\', \'DOWN\')" title="เลื่อนลง"><i data-lucide="arrow-down" class="w-3.5 h-3.5"></i></button>'
+            + '    </div>'
+            + '  </td>'
+            + '  <td class="text-right">'
+            + '    <div class="inline-flex gap-1">'
+            + '      <button type="button" class="btn-ghost !p-1.5" onclick="PORTAL_ADMIN.openSinglePositionModal(\'' + esc(p.position_id) + '\')" title="แก้ไข"><i data-lucide="pencil" class="w-3.5 h-3.5 text-amber-500"></i></button>'
+            + '      <button type="button" class="btn-ghost !p-1.5" onclick="PORTAL_ADMIN.deletePosition(\'' + esc(p.position_id) + '\', \'' + esc(p.position_name) + '\')" title="ลบ"><i data-lucide="trash-2" class="w-3.5 h-3.5 text-red-500"></i></button>'
+            + '    </div>'
+            + '  </td>'
+            + '</tr>';
+        });
+      }
+
+      tableHeadersHtml = ''
+        + '<tr>'
+        + app.th('ลำดับ', 'no')
+        + app.th('ชื่อสายงาน / ตำแหน่ง', 'name')
+        + app.th('ระดับตำแหน่ง', 'position')
+        + app.th('เลื่อนลำดับ', 'action')
+        + app.th('จัดการ', 'action')
+        + '</tr>';
+
+      toolsHtml = ''
+        + '<button type="button" class="btn-ghost" onclick="PORTAL_ADMIN.promptAddNewPositionType()"><i data-lucide="folder-plus" class="w-4 h-4"></i> เพิ่มประเภทตำแหน่งใหม่</button>'
+        + '<button type="button" class="btn-primary" onclick="PORTAL_ADMIN.openAddPositionModal(\'' + esc(curType) + '\')"><i data-lucide="plus" class="w-4 h-4"></i> เพิ่มตำแหน่ง (' + esc(curType) + ')</button>';
     }
 
-    var toolsHtml = ''
-      + '<button type="button" class="btn-ghost" onclick="PORTAL_ADMIN.openBatchPositionModal(\'' + curType + '\')"><i data-lucide="file-plus" class="w-4 h-4"></i> เพิ่มแบบกลุ่ม</button>'
-      + '<button type="button" class="btn-primary" onclick="PORTAL_ADMIN.openSinglePositionModal()"><i data-lucide="plus" class="w-4 h-4"></i> เพิ่มตำแหน่งเดี่ยว</button>';
-
-    var sectionHeader = app.sectionBar('โครงสร้างสายงานและระดับตำแหน่ง (Position Structure)', toolsHtml, 'layers');
+    var sectionHeader = app.sectionBar(sectionBarTitle, toolsHtml, 'layers');
 
     var tableHtml = ''
       + '<div class="card overflow-hidden">'
       + '  <div class="overflow-x-auto">'
       + '    <table class="tbl min-w-[700px]">'
-      + '      <thead>'
-      + '        <tr>'
-      + app.th('ลำดับ', 'no')
-      + app.th('ชื่อสายงาน / ตำแหน่ง', 'name')
-      + app.th('ระดับตำแหน่ง', 'position')
-      + app.th('เลื่อนลำดับ', 'action')
-      + app.th('จัดการ', 'action')
-      + '        </tr>'
-      + '      </thead>'
+      + '      <thead>' + tableHeadersHtml + '</thead>'
       + '      <tbody>' + rowsHtml + '</tbody>'
       + '    </table>'
       + '  </div>'
@@ -1464,6 +1692,36 @@
   function switchPosTab(tabType) {
     ADMIN_STATE.currentPosTab = tabType;
     renderPositionsPage();
+  }
+
+  async function promptAddNewPositionType() {
+    var app = getApp();
+    if (!app) return;
+    var newType = '';
+    if (global.Swal) {
+      var res = await global.Swal.fire({
+        title: 'เพิ่มประเภทตำแหน่งใหม่',
+        input: 'text',
+        inputLabel: 'ระบุชื่อประเภทตำแหน่งใหม่ (เช่น พนักงานจ้างเหมา, พนักงานราชการ)',
+        inputPlaceholder: 'ชื่อประเภทตำแหน่ง',
+        showCancelButton: true,
+        confirmButtonText: 'ถัดไป',
+        cancelButtonText: 'ยกเลิก',
+        confirmButtonColor: '#007B3E',
+        inputValidator: function (value) {
+          if (!value || !value.trim()) return 'กรุณาระบุชื่อประเภทตำแหน่ง!';
+        }
+      });
+      if (res.isConfirmed && res.value) {
+        newType = res.value.trim();
+      }
+    } else {
+      newType = (prompt('ระบุชื่อประเภทตำแหน่งใหม่:') || '').trim();
+    }
+    if (newType) {
+      ADMIN_STATE.currentPosTab = newType;
+      openAddPositionModal(newType);
+    }
   }
 
   async function movePosition(positionId, direction) {
@@ -1479,7 +1737,7 @@
 
     var idx = list.findIndex(function (x) { return x.position_id === positionId; });
     if (idx === -1) return;
-    var targetIdx = (direction === 'UP') ? idx - 1 : idx + 1;
+    var targetIdx = (direction === 'UP' || direction === 'up') ? idx - 1 : idx + 1;
     if (targetIdx < 0 || targetIdx >= list.length) return;
 
     var itemA = list[idx];
@@ -1573,6 +1831,7 @@
       var bootRes = await getApi().checkSystemInit(true);
       if (bootRes && bootRes.position_structure) {
         getApp().STATE.positionStructure = bootRes.position_structure;
+        ADMIN_STATE.positionStructure = bootRes.position_structure;
       }
       renderPositionsPage();
     } catch (err) {
@@ -1580,71 +1839,137 @@
     }
   }
 
-  function openBatchPositionModal(currentType) {
+  function openAddPositionModal(currentType) {
     var app = getApp();
     if (!app) return;
-    var type = currentType || ADMIN_STATE.currentPosTab;
+    var type = currentType || ADMIN_STATE.currentPosTab || 'ผู้บริหาร';
     var posTypes = app.getPositionTypes();
+    if (type && posTypes.indexOf(type) === -1) {
+      posTypes = [type].concat(posTypes);
+    }
 
-    var title = 'เพิ่มสายงาน/ตำแหน่งแบบกลุ่ม (Batch Add: ' + esc(type) + ')';
+    var title = 'เพิ่มสายงาน/ตำแหน่ง (' + esc(type) + ')';
 
     var bodyHtml = ''
-      + '<form id="admBatchPosForm" onsubmit="event.preventDefault();" class="space-y-4">'
+      + '<form id="admAddPosForm" onsubmit="event.preventDefault();" class="space-y-4">'
       + '  <div>'
       + '    <label class="lbl">ประเภทตำแหน่ง *</label>'
-      + '    <select id="adm_batch_pos_type" class="inp" required>' + app.buildOptionsHtml(posTypes, type) + '</select>'
+      + '    <input type="text" id="adm_add_pos_type" class="inp" value="' + esc(type) + '" required>'
       + '  </div>'
       + '  <div>'
-      + '    <label class="lbl">รายการสายงาน / ระดับ (วาง 1 บรรทัด ต่อ 1 ตำแหน่ง) *</label>'
-      + '    <p class="text-xs muted mb-1.5">สามารถระบุระดับตำแหน่งคั่นด้วยเครื่องหมายจุลภาค <code>,</code> เช่น <code>เจ้าพนักงานเทศกิจ, ปฏิบัติงาน</code></p>'
-      + '    <textarea id="adm_batch_pos_lines" class="inp" rows="8" placeholder="เจ้าพนักงานเทศกิจ, ปฏิบัติงาน&#10;เจ้าพนักงานเทศกิจ, ชำนาญงาน&#10;นิติกร, ปฏิบัติการ&#10;นิติกร, ชำนาญการ"></textarea>'
+      + '    <div class="flex items-center justify-between mb-2">'
+      + '      <label class="lbl !mb-0 font-bold">รายการตำแหน่งที่ต้องการเพิ่ม (เพิ่มได้หลายแถวพร้อมกัน)</label>'
+      + '      <button type="button" class="btn-ghost !py-1 !px-2.5 text-xs text-[#007B3E] font-bold" onclick="PORTAL_ADMIN.addPositionInputRow()">'
+      + '        <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> + เพิ่มแถว'
+      + '      </button>'
+      + '    </div>'
+      + '    <div class="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-xl max-h-[340px] overflow-y-auto">'
+      + '      <table class="tbl w-full text-xs">'
+      + '        <thead>'
+      + '          <tr>'
+      + '            <th style="width:36px;" class="text-center">#</th>'
+      + '            <th>ชื่อสายงาน / ตำแหน่ง *</th>'
+      + '            <th style="width:160px;">ระดับตำแหน่ง (ถ้ามี)</th>'
+      + '            <th style="width:40px;" class="text-center">ลบ</th>'
+      + '          </tr>'
+      + '        </thead>'
+      + '        <tbody id="adm_pos_rows_body">'
+      + '        </tbody>'
+      + '      </table>'
+      + '    </div>'
       + '  </div>'
       + '</form>';
 
     var footerHtml = ''
       + '<button type="button" class="btn-ghost" onclick="PORTAL_APP.closeModal()">ยกเลิก</button>'
-      + '<button type="button" class="btn-primary" onclick="PORTAL_ADMIN.submitBatchPositionModal()"><i data-lucide="plus-circle" class="w-4 h-4"></i> เพิ่มตำแหน่งทั้งหมด</button>';
+      + '<button type="button" class="btn-primary" onclick="PORTAL_ADMIN.submitAddPositionModal()"><i data-lucide="save" class="w-4 h-4"></i> บันทึกตำแหน่งทั้งหมด</button>';
 
-    app.openModal(title, bodyHtml, footerHtml, '580px', 'file-plus');
+    app.openModal(title, bodyHtml, footerHtml, '650px', 'plus-circle');
+    addPositionInputRow();
+    addPositionInputRow();
+    addPositionInputRow();
     triggerIcons();
   }
 
-  async function submitBatchPositionModal() {
-    var linesStr = (document.getElementById('adm_batch_pos_lines').value || '').trim();
-    if (!linesStr) {
-      alertError('กรุณาระบุรายการตำแหน่งอย่างน้อย 1 บรรทัด');
+  function addPositionInputRow(pName, pLevel) {
+    var tbody = document.getElementById('adm_pos_rows_body');
+    if (!tbody) return;
+    var rowCount = tbody.querySelectorAll('tr').length + 1;
+    var tr = document.createElement('tr');
+    tr.className = 'pos-input-row';
+    tr.innerHTML = ''
+      + '<td class="text-center font-bold muted row-idx">' + rowCount + '</td>'
+      + '<td><input type="text" class="inp !py-1 !text-xs pos-row-name" placeholder="เช่น เจ้าพนักงานเทศกิจ, นิติกร" value="' + esc(pName || '') + '"></td>'
+      + '<td><input type="text" class="inp !py-1 !text-xs pos-row-level" placeholder="เช่น ปฏิบัติงาน, ชำนาญการ" value="' + esc(pLevel || '') + '"></td>'
+      + '<td class="text-center"><button type="button" class="btn-ghost !p-1 text-red-500 hover:text-red-700" onclick="PORTAL_ADMIN.removePositionInputRow(this)" title="ลบแถวนี้"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button></td>';
+    tbody.appendChild(tr);
+    triggerIcons();
+  }
+
+  function removePositionInputRow(btn) {
+    var tbody = document.getElementById('adm_pos_rows_body');
+    if (!tbody) return;
+    var tr = btn.closest('tr');
+    if (tr) tr.remove();
+    var rows = tbody.querySelectorAll('tr');
+    rows.forEach(function (r, idx) {
+      var idxCell = r.querySelector('.row-idx');
+      if (idxCell) idxCell.textContent = String(idx + 1);
+    });
+    if (rows.length === 0) {
+      addPositionInputRow();
+    }
+  }
+
+  async function submitAddPositionModal() {
+    var tbody = document.getElementById('adm_pos_rows_body');
+    if (!tbody) return;
+
+    var type = (document.getElementById('adm_add_pos_type').value || '').trim();
+    if (!type) {
+      alertError('กรุณาระบุประเภทตำแหน่ง');
       return;
     }
 
-    var type = document.getElementById('adm_batch_pos_type').value;
-    var lines = linesStr.split('\n');
+    var rows = tbody.querySelectorAll('.pos-input-row');
     var items = [];
-    lines.forEach(function (line) {
-      var trimmed = line.trim();
-      if (!trimmed) return;
-      var parts = trimmed.split(',');
-      items.push({
-        position_name: parts[0].trim(),
-        position_level: parts[1] ? parts[1].trim() : ''
-      });
+    rows.forEach(function (r) {
+      var nameInp = r.querySelector('.pos-row-name');
+      var levelInp = r.querySelector('.pos-row-level');
+      var pName = (nameInp && nameInp.value) ? nameInp.value.trim() : '';
+      var pLevel = (levelInp && levelInp.value) ? levelInp.value.trim() : '';
+      if (pName) {
+        items.push({ position_name: pName, position_level: pLevel });
+      }
     });
+
+    if (items.length === 0) {
+      alertError('กรุณาระบุชื่อตำแหน่งอย่างน้อย 1 แถว');
+      return;
+    }
 
     try {
       var res = await getApi().batchAddPosition({
         position_type: type,
         items: items
       });
-      toast(res.message || 'เพิ่มตำแหน่งแบบกลุ่มสำเร็จ');
+      toast(res.message || 'เพิ่มตำแหน่งเรียบร้อยแล้ว');
       getApp().closeModal();
 
       var bootRes = await getApi().checkSystemInit(true);
       if (bootRes && bootRes.position_structure) {
         getApp().STATE.positionStructure = bootRes.position_structure;
+        ADMIN_STATE.positionStructure = bootRes.position_structure;
       }
+      ADMIN_STATE.currentPosTab = type;
       renderPositionsPage();
     } catch (err) {
-      alertError(err.message || 'ไม่สามารถเพิ่มตำแหน่งแบบกลุ่มได้');
+      alertError(err.message || 'ไม่สามารถเพิ่มตำแหน่งได้');
     }
+  }
+
+  function openBatchPositionModal(currentType) {
+    openAddPositionModal(currentType);
   }
 
   async function deletePosition(positionId, name) {
@@ -1663,6 +1988,7 @@
       var bootRes = await getApi().checkSystemInit(true);
       if (bootRes && bootRes.position_structure) {
         getApp().STATE.positionStructure = bootRes.position_structure;
+        ADMIN_STATE.positionStructure = bootRes.position_structure;
       }
       renderPositionsPage();
     } catch (err) {
@@ -1691,74 +2017,64 @@
 
     var formHtml = ''
       + '<form id="admSettingsForm" onsubmit="event.preventDefault();" class="space-y-6">'
-      // Card 1: Branding
+      // Card 1: Branding & Display
       + '  <div class="card p-5">'
       + '    <div class="flex items-center gap-2 mb-3"><i data-lucide="palette" class="w-4 h-4 accent"></i><h3 class="font-bold text-sm">1. อัตลักษณ์และแบรนด์ (Branding & Identity)</h3></div>'
       + '    <div class="grid md:grid-cols-2 gap-4">'
-      + '      <div><label class="lbl">ชื่อระบบ (App_Name)</label><input type="text" id="cfg_App_Name" class="inp" value="' + esc(s.App_Name || '') + '"></div>'
-      + '      <div><label class="lbl">ชื่อหน่วยงาน (Organization_Name)</label><input type="text" id="cfg_Organization_Name" class="inp" value="' + esc(s.Organization_Name || '') + '"></div>'
-      + '      <div><label class="lbl">สังกัดย่อย (Organization_Sub)</label><input type="text" id="cfg_Organization_Sub" class="inp" value="' + esc(s.Organization_Sub || '') + '"></div>'
-      + '      <div><label class="lbl">ธีมเริ่มต้น (Default_Theme)</label>'
+      + '      <div><label class="lbl">ชื่อระบบที่แสดง (App_Display_Name)</label><input type="text" id="cfg_App_Display_Name" class="inp" placeholder="เช่น ระบบ Central Portal & SSO (สตบ.สนท.)" value="' + esc(s.App_Display_Name || '') + '"></div>'
+      + '      <div><label class="lbl">URL พื้นฐานของระบบ (App_Base_Url)</label><input type="text" id="cfg_App_Base_Url" class="inp" placeholder="เช่น https://stb.bangkok.go.th/portal" value="' + esc(s.App_Base_Url || '') + '"></div>'
+      + '      <div><label class="lbl">URL รูปภาพโลโก้หน้า Login (Login_Logo_URL)</label><input type="text" id="cfg_Login_Logo_URL" class="inp" value="' + esc(s.Login_Logo_URL || '') + '"></div>'
+      + '      <div><label class="lbl">URL รูปภาพโลโก้บน Header/Dashboard (Dashboard_Logo_URL)</label><input type="text" id="cfg_Dashboard_Logo_URL" class="inp" value="' + esc(s.Dashboard_Logo_URL || '') + '"></div>'
+      + '      <div><label class="lbl">URL ภาพโปรไฟล์เริ่มต้น (Default_Profile_Picture_URL)</label><input type="text" id="cfg_Default_Profile_Picture_URL" class="inp" value="' + esc(s.Default_Profile_Picture_URL || '') + '"></div>'
+      + '      <div><label class="lbl">ธีมเริ่มต้นของระบบ (Default_Theme)</label>'
       + '        <select id="cfg_Default_Theme" class="inp">'
-      + '          <option value="light"' + (s.Default_Theme === 'light' ? ' selected' : '') + '>โหมดกลางวัน (Light Mode)</option>'
+      + '          <option value="light"' + (s.Default_Theme === 'light' || !s.Default_Theme ? ' selected' : '') + '>โหมดกลางวัน (Light Mode)</option>'
       + '          <option value="dark"' + (s.Default_Theme === 'dark' ? ' selected' : '') + '>โหมดกลางคืน (Dark Mode)</option>'
       + '        </select>'
       + '      </div>'
-      + '      <div class="md:col-span-2"><label class="lbl">URL โลโก้กลาง (Portal_Logo_URL)</label><input type="text" id="cfg_Portal_Logo_URL" class="inp" value="' + esc(s.Portal_Logo_URL || '') + '"></div>'
       + '    </div>'
       + '  </div>'
-      // Card 2: Security
+      // Card 2: Security & Session
       + '  <div class="card p-5">'
-      + '    <div class="flex items-center gap-2 mb-3"><i data-lucide="shield" class="w-4 h-4 accent"></i><h3 class="font-bold text-sm">2. ความปลอดภัยและการเข้าถึง (Security Policies)</h3></div>'
+      + '    <div class="flex items-center gap-2 mb-3"><i data-lucide="shield" class="w-4 h-4 accent"></i><h3 class="font-bold text-sm">2. ความปลอดภัยและอายุโทเค็น (Security Policies & Token Lifetimes)</h3></div>'
       + '    <div class="grid md:grid-cols-3 gap-4">'
-      + '      <div><label class="lbl">อนุญาตให้ลงทะเบียนเอง (Allow_Registration)</label>'
-      + '        <select id="cfg_Allow_Registration" class="inp">'
-      + '          <option value="TRUE"' + (s.Allow_Registration === 'TRUE' ? ' selected' : '') + '>เปิดให้ลงทะเบียนเอง</option>'
-      + '          <option value="FALSE"' + (s.Allow_Registration === 'FALSE' ? ' selected' : '') + '>ปิด (ผู้ดูแลสร้างให้เท่านั้น)</option>'
-      + '        </select>'
-      + '      </div>'
-      + '      <div><label class="lbl">บังคับยืนยันอีเมล (Require_Email_Verification)</label>'
-      + '        <select id="cfg_Require_Email_Verification" class="inp">'
-      + '          <option value="TRUE"' + (s.Require_Email_Verification === 'TRUE' ? ' selected' : '') + '>ต้องยืนยันอีเมลก่อนใช้งาน</option>'
-      + '          <option value="FALSE"' + (s.Require_Email_Verification === 'FALSE' ? ' selected' : '') + '>ใช้งานได้ทันที</option>'
-      + '        </select>'
-      + '      </div>'
-      + '      <div><label class="lbl">อายุ Session เข้าสู่ระบบ (Session_Timeout_Hours)</label><input type="number" id="cfg_Session_Timeout_Hours" class="inp" value="' + esc(s.Session_Timeout_Hours || 24) + '"></div>'
+      + '      <div><label class="lbl">อายุ Session เข้าสู่ระบบ (Session_Hours - ชั่วโมง)</label><input type="number" id="cfg_Session_Hours" class="inp" value="' + esc(s.Session_Hours || 12) + '"></div>'
+      + '      <div><label class="lbl">อายุลิงก์ยืนยันอีเมล (Verify_Email_Hours - ชั่วโมง)</label><input type="number" id="cfg_Verify_Email_Hours" class="inp" value="' + esc(s.Verify_Email_Hours || 24) + '"></div>'
+      + '      <div><label class="lbl">อายุโทเค็นรีเซ็ตรหัสผ่าน (Reset_Token_Minutes - นาที)</label><input type="number" id="cfg_Reset_Token_Minutes" class="inp" value="' + esc(s.Reset_Token_Minutes || 15) + '"></div>'
       + '    </div>'
       + '  </div>'
-      // Card 3: Drive Folders
+      // Card 3: Google Drive Folders
       + '  <div class="card p-5">'
       + '    <div class="flex items-center gap-2 mb-3"><i data-lucide="folder-git-2" class="w-4 h-4 accent"></i><h3 class="font-bold text-sm">3. โฟลเดอร์จัดเก็บไฟล์ Google Drive</h3></div>'
-      + '    <div class="space-y-3">'
+      + '    <div class="grid md:grid-cols-2 gap-4">'
       + '      <div>'
-      + '        <label class="lbl">Google Drive Folder ID รูปโปรไฟล์ (Profile_Folder_ID)</label>'
+      + '        <label class="lbl">โฟลเดอร์รูปโปรไฟล์ผู้ใช้ (Profile_Folder_ID)</label>'
       + '        <div class="flex gap-2">'
-      + '          <input type="text" id="cfg_Profile_Folder_ID" class="inp" value="' + esc(s.Profile_Folder_ID || '') + '" placeholder="Folder ID จากลิงก์ Drive">'
+      + '          <input type="text" id="cfg_Profile_Folder_ID" class="inp" value="' + esc(s.Profile_Folder_ID || '') + '" placeholder="Folder ID จาก Google Drive">'
       + '          <button type="button" class="btn-ghost shrink-0" onclick="PORTAL_ADMIN.testDriveFolder(\'cfg_Profile_Folder_ID\', \'รูปโปรไฟล์\')"><i data-lucide="check-circle" class="w-3.5 h-3.5"></i> ทดสอบ</button>'
       + '        </div>'
       + '      </div>'
       + '      <div>'
-      + '        <label class="lbl">Google Drive Folder ID ลายเซ็นดิจิทัล (Signature_Folder_ID)</label>'
+      + '        <label class="lbl">โฟลเดอร์รูปลายเซ็นดิจิทัล (Signature_Folder_ID)</label>'
       + '        <div class="flex gap-2">'
-      + '          <input type="text" id="cfg_Signature_Folder_ID" class="inp" value="' + esc(s.Signature_Folder_ID || '') + '" placeholder="Folder ID จากลิงก์ Drive">'
+      + '          <input type="text" id="cfg_Signature_Folder_ID" class="inp" value="' + esc(s.Signature_Folder_ID || '') + '" placeholder="Folder ID จาก Google Drive">'
       + '          <button type="button" class="btn-ghost shrink-0" onclick="PORTAL_ADMIN.testDriveFolder(\'cfg_Signature_Folder_ID\', \'ลายเซ็น\')"><i data-lucide="check-circle" class="w-3.5 h-3.5"></i> ทดสอบ</button>'
       + '        </div>'
       + '      </div>'
       + '      <div>'
-      + '        <label class="lbl">Google Drive Folder ID เอกสารส่วนกลาง (Document_Folder_ID)</label>'
+      + '        <label class="lbl">โฟลเดอร์รูปถ่ายบุคลากรทางการ (Personnel_Photo_Folder_ID)</label>'
       + '        <div class="flex gap-2">'
-      + '          <input type="text" id="cfg_Document_Folder_ID" class="inp" value="' + esc(s.Document_Folder_ID || '') + '" placeholder="Folder ID จากลิงก์ Drive">'
-      + '          <button type="button" class="btn-ghost shrink-0" onclick="PORTAL_ADMIN.testDriveFolder(\'cfg_Document_Folder_ID\', \'เอกสารทั่วไป\')"><i data-lucide="check-circle" class="w-3.5 h-3.5"></i> ทดสอบ</button>'
+      + '          <input type="text" id="cfg_Personnel_Photo_Folder_ID" class="inp" value="' + esc(s.Personnel_Photo_Folder_ID || '') + '" placeholder="Folder ID จาก Google Drive">'
+      + '          <button type="button" class="btn-ghost shrink-0" onclick="PORTAL_ADMIN.testDriveFolder(\'cfg_Personnel_Photo_Folder_ID\', \'รูปบุคลากร\')"><i data-lucide="check-circle" class="w-3.5 h-3.5"></i> ทดสอบ</button>'
       + '        </div>'
       + '      </div>'
-      + '    </div>'
-      + '  </div>'
-      // Card 4: System
-      + '  <div class="card p-5">'
-      + '    <div class="flex items-center gap-2 mb-3"><i data-lucide="server" class="w-4 h-4 accent"></i><h3 class="font-bold text-sm">4. ตั้งค่าระบบและข้อความแจ้งเตือน</h3></div>'
-      + '    <div class="space-y-3">'
-      + '      <div><label class="lbl">ข้อความประกาศหน้าแรก (Announcement_Banner)</label><input type="text" id="cfg_Announcement_Banner" class="inp" value="' + esc(s.Announcement_Banner || '') + '"></div>'
-      + '      <div><label class="lbl">อีเมลติดต่อฝ่ายดูแลระบบ (Support_Email)</label><input type="email" id="cfg_Support_Email" class="inp" value="' + esc(s.Support_Email || '') + '"></div>'
+      + '      <div>'
+      + '        <label class="lbl">โฟลเดอร์ไอคอนเว็บแอปย่อย (App_Icon_Folder_ID)</label>'
+      + '        <div class="flex gap-2">'
+      + '          <input type="text" id="cfg_App_Icon_Folder_ID" class="inp" value="' + esc(s.App_Icon_Folder_ID || '') + '" placeholder="Folder ID จาก Google Drive">'
+      + '          <button type="button" class="btn-ghost shrink-0" onclick="PORTAL_ADMIN.testDriveFolder(\'cfg_App_Icon_Folder_ID\', \'ไอคอนเว็บแอป\')"><i data-lucide="check-circle" class="w-3.5 h-3.5"></i> ทดสอบ</button>'
+      + '        </div>'
+      + '      </div>'
       + '    </div>'
       + '  </div>'
       + '</form>';
@@ -1798,35 +2114,33 @@
     if (!app) return;
 
     var keys = [
-      'App_Name',
-      'Organization_Name',
-      'Organization_Sub',
-      'Portal_Logo_URL',
+      'App_Display_Name',
+      'App_Base_Url',
+      'Login_Logo_URL',
+      'Dashboard_Logo_URL',
+      'Default_Profile_Picture_URL',
       'Default_Theme',
-      'Allow_Registration',
-      'Require_Email_Verification',
-      'Session_Timeout_Hours',
+      'Session_Hours',
+      'Verify_Email_Hours',
+      'Reset_Token_Minutes',
       'Profile_Folder_ID',
       'Signature_Folder_ID',
-      'Document_Folder_ID',
-      'Announcement_Banner',
-      'Support_Email'
+      'Personnel_Photo_Folder_ID',
+      'App_Icon_Folder_ID'
     ];
 
-    var updates = [];
+    var settingsObj = {};
     keys.forEach(function (k) {
       var el = document.getElementById('cfg_' + k);
       if (el) {
-        updates.push({ key: k, value: el.value.trim() });
+        settingsObj[k] = el.value.trim();
       }
     });
 
     try {
-      for (var i = 0; i < updates.length; i++) {
-        await getApi().saveSetting(updates[i].key, updates[i].value);
-        app.STATE.settings[updates[i].key] = updates[i].value;
-      }
-      toast('บันทึกการตั้งค่าระบบเรียบร้อยแล้ว');
+      var res = await getApi().saveSystemSettings(settingsObj);
+      Object.assign(app.STATE.settings, settingsObj);
+      toast(res.message || 'บันทึกการตั้งค่าระบบเรียบร้อยแล้ว');
       app.applyBranding();
       if (app.STATE.settings.Default_Theme) {
         app.applyTheme(app.STATE.settings.Default_Theme, false);
@@ -1926,6 +2240,8 @@
     openWebappModal: openWebappModal,
     submitWebappModal: submitWebappModal,
     deleteWebapp: deleteWebapp,
+    moveWebapp: moveWebapp,
+    toggleWebappStatus: toggleWebappStatus,
 
     // Reference
     renderReferencePage: renderReferencePage,
@@ -1934,18 +2250,27 @@
     moveReference: moveReference,
     openSingleReferenceModal: openSingleReferenceModal,
     submitSingleReferenceModal: submitSingleReferenceModal,
+    openAddReferenceModal: openAddReferenceModal,
+    addReferenceInputRow: addReferenceInputRow,
+    removeReferenceInputRow: removeReferenceInputRow,
+    submitAddReferenceModal: submitAddReferenceModal,
     openBatchReferenceModal: openBatchReferenceModal,
-    submitBatchReferenceModal: submitBatchReferenceModal,
+    submitBatchReferenceModal: submitAddReferenceModal,
     deleteReference: deleteReference,
 
     // Positions
     renderPositionsPage: renderPositionsPage,
     switchPosTab: switchPosTab,
     movePosition: movePosition,
+    promptAddNewPositionType: promptAddNewPositionType,
     openSinglePositionModal: openSinglePositionModal,
     submitSinglePositionModal: submitSinglePositionModal,
+    openAddPositionModal: openAddPositionModal,
+    addPositionInputRow: addPositionInputRow,
+    removePositionInputRow: removePositionInputRow,
+    submitAddPositionModal: submitAddPositionModal,
     openBatchPositionModal: openBatchPositionModal,
-    submitBatchPositionModal: submitBatchPositionModal,
+    submitBatchPositionModal: submitAddPositionModal,
     deletePosition: deletePosition,
 
     // Settings & Reset

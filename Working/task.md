@@ -23,6 +23,11 @@
   - [x] พัฒนา `WebApp/Portal-SSO/assets/js/portal-admin.js` ครบทั้ง 6 โมดูลแอดมิน (`#personnel`, `#users`, `#webapps`, `#reference`, `#positions`, `#settings`)
   - [x] พัฒนา `WebApp/sample-subapp/index.html` ทดสอบ SSO Handshake 38 ฟิลด์, Master Data และ Drive Upload
   - [x] แก้ไข Integration Mismatch ข้ามไฟล์ (`stb-loader.js`, `portal-config.js`, `stb-sso-guard.js`) และรัน SQL Patch หมวด B2 บน Supabase จริง
+- [x] **🟠 เฟส 1E: โครงสร้างสังกัด 4 ระดับ ไดนามิก 100% + ป้องกันข้อมูลซ้ำ + Multi-Row Modals + Cross-Menu Sync** *(เสร็จสมบูรณ์ 100%)*
+  - [x] **Database & Live Patch:** `fn_save_reference_data` / `fn_save_position_structure` โหมด BATCH Compound Unique deduplication, Seed DIVISION ครบทั้ง 3 ส่วน, `fn_get_dashboard_apps` Maintenance status, `fn_generate_sso_token` Maintenance guard
+  - [x] **Portal API:** `batchAddReference`, `batchAddPosition`, `saveSetting`, `saveSystemSettings`
+  - [x] **Portal App:** Dynamic Org & Position Cascades (100% Deduplication), Register Step 2 `reg_division`, Dashboard Maintenance Guard & Badges, Profile Masked ID Card, Single Username Edit, Live Header Sync
+  - [x] **Portal Admin:** Dynamic `#personnel` STATUS, `#webapps` ▲▼ & Status Toggle, `#users` Perm Revoke, `#reference` 4 Bureau Tabs & Multi-Row Modal, `#positions` PREFIX/STATUS & Dynamic Type & Multi-Row Modal, `#settings` 13 Database Keys Sync
 
 ## เฟส 2+: การพัฒนาเว็บแอปพลิเคชันย่อยเฉพาะทาง
 - [ ] วางแผนและออกแบบเว็บแอปย่อยแรกของส่วนตรวจและบังคับการใน `WebApp/<app_name>/`

@@ -279,11 +279,19 @@
       }, { loadingText: 'กำลังลบรายการ...' });
     },
 
+    batchAddReference: function (payload) {
+      return this.saveReferenceData(Object.assign({ mode: 'BATCH', action: 'BATCH' }, payload));
+    },
+
     savePositionStructure: function (payload) {
       return rpc('fn_save_position_structure', {
         p_session_token: getSessionToken(),
         p_payload: payload
       }, { loadingText: 'กำลังบันทึกโครงสร้างตำแหน่ง...' });
+    },
+
+    batchAddPosition: function (payload) {
+      return this.savePositionStructure(Object.assign({ mode: 'BATCH', action: 'BATCH' }, payload));
     },
 
     deletePositionStructure: function (posId) {
@@ -298,6 +306,12 @@
         p_session_token: getSessionToken(),
         p_settings: settingsObj
       }, { loadingText: 'กำลังบันทึกการตั้งค่าระบบ...' });
+    },
+
+    saveSetting: function (key, value) {
+      var obj = {};
+      obj[key] = value;
+      return this.saveSystemSettings(obj);
     },
 
     resetTestData: async function (mode) {

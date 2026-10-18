@@ -755,11 +755,11 @@ BEGIN
                 'status', w.status,
                 'sort_order', w.sort_order,
                 'access_level', 'ADMIN'
-            ) ORDER BY w.sort_order, w.name
+            ) ORDER BY w.sort_order ASC, w.webapp_id ASC
         ), '[]'::jsonb)
         INTO v_apps
         FROM portal.webapps w
-        WHERE w.status IN ('เปิดใช้งาน', 'ACTIVE');
+        WHERE w.status IN ('เปิดใช้งาน', 'ACTIVE', 'ปิดปรับปรุง', 'MAINTENANCE');
     ELSE
         SELECT COALESCE(jsonb_agg(
             jsonb_build_object(
@@ -771,14 +771,14 @@ BEGIN
                 'status', w.status,
                 'sort_order', w.sort_order,
                 'access_level', p.access_level
-            ) ORDER BY w.sort_order, w.name
+            ) ORDER BY w.sort_order ASC, w.webapp_id ASC
         ), '[]'::jsonb)
         INTO v_apps
         FROM portal.webapps w
         JOIN portal.permissions p ON p.webapp_id = w.webapp_id
         WHERE p.personnel_ref_id = (v_session->>'user_id')
           AND p.access_level != 'None'
-          AND w.status IN ('เปิดใช้งาน', 'ACTIVE');
+          AND w.status IN ('เปิดใช้งาน', 'ACTIVE', 'ปิดปรับปรุง', 'MAINTENANCE');
     END IF;
     
     RETURN jsonb_build_object('success', true, 'data', v_apps);
@@ -807,10 +807,10 @@ BEGIN
     
     SELECT * INTO v_app
     FROM portal.webapps
-    WHERE webapp_id = p_webapp_id AND status IN ('เปิดใช้งาน', 'ACTIVE');
+    WHERE webapp_id = p_webapp_id AND status IN ('เปิดใช้งาน', 'ACTIVE', 'ปิดปรับปรุง', 'MAINTENANCE');
     
     IF NOT FOUND THEN
-        RAISE EXCEPTION 'ไม่พบแอปพลิเคชันหรือแอปพลิเคชันปิดปรับปรุง';
+        RAISE EXCEPTION 'ไม่พบแอปพลิเคชันหรือแอปพลิเคชันถูกระงับการใช้งาน';
     END IF;
     
     IF v_session->>'role' != 'SUPERADMIN' THEN
@@ -820,6 +820,10 @@ BEGIN
         
         IF v_lvl IS NULL OR v_lvl = 'None' THEN
             RAISE EXCEPTION 'คุณไม่มีสิทธิ์เข้าใช้งานแอปพลิเคชันนี้';
+        END IF;
+
+        IF v_app.status IN ('ปิดปรับปรุง', 'MAINTENANCE') AND v_lvl != 'ADMIN' THEN
+            RAISE EXCEPTION 'แอปพลิเคชันอยู่ระหว่างปิดปรับปรุงชั่วคราว (อนุญาตเฉพาะผู้ดูแลระบบของแอปเข้าใช้งาน)';
         END IF;
     END IF;
     
@@ -1554,58 +1558,111 @@ SET search_path = portal, public
 AS $$
 DECLARE
     v_session jsonb;
-    v_mode text := COALESCE(p_payload->>'mode', 'SINGLE');
+    v_mode text := upper(COALESCE(p_payload->>'mode', p_payload->>'action', 'SINGLE'));
     v_id text;
     v_item jsonb;
     v_max_sort integer;
+    v_type text;
+    v_val text;
+    v_short text;
+    v_parent_type text;
+    v_parent_val text;
+    v_inserted_count integer := 0;
 BEGIN
     v_session := portal.fn_assert_session_or_setup(p_session_token, 'ADMIN');
 
     IF v_mode = 'BATCH' AND jsonb_typeof(p_payload->'items') = 'array' THEN
         FOR v_item IN SELECT * FROM jsonb_array_elements(p_payload->'items') LOOP
-            IF trim(COALESCE(v_item->>'value', '')) != '' THEN
-                SELECT COALESCE(max(sort_order), 0) + 1 INTO v_max_sort
-                FROM portal.reference_data
-                WHERE type = (v_item->>'type');
+            IF jsonb_typeof(v_item) = 'object' THEN
+                v_type := upper(COALESCE(NULLIF(trim(v_item->>'type'), ''), NULLIF(trim(p_payload->>'type'), '')));
+                v_val := trim(COALESCE(v_item->>'value', ''));
+                v_short := trim(COALESCE(v_item->>'short_name', ''));
+                v_parent_type := upper(COALESCE(NULLIF(trim(v_item->>'parent_type'), ''), NULLIF(trim(p_payload->>'parent_type'), ''), ''));
+                v_parent_val := trim(COALESCE(NULLIF(trim(v_item->>'parent_value'), ''), NULLIF(trim(p_payload->>'parent_value'), ''), ''));
+            ELSE
+                v_type := upper(trim(COALESCE(p_payload->>'type', '')));
+                v_val := trim(trim(both '"' from v_item::text));
+                v_short := '';
+                v_parent_type := upper(trim(COALESCE(p_payload->>'parent_type', '')));
+                v_parent_val := trim(COALESCE(p_payload->>'parent_value', ''));
+            END IF;
 
-                INSERT INTO portal.reference_data (type, value, short_name, parent_type, parent_value, sort_order, is_active)
-                VALUES (
-                    trim(v_item->>'type'),
-                    trim(v_item->>'value'),
-                    trim(COALESCE(v_item->>'short_name', '')),
-                    trim(COALESCE(v_item->>'parent_type', '')),
-                    trim(COALESCE(v_item->>'parent_value', '')),
-                    COALESCE((v_item->>'sort_order')::integer, v_max_sort),
-                    true
-                );
+            IF v_val != '' AND v_type != '' THEN
+                IF NOT EXISTS (
+                    SELECT 1 FROM portal.reference_data
+                    WHERE type = v_type
+                      AND COALESCE(parent_value, '') = COALESCE(v_parent_val, '')
+                      AND value = v_val
+                ) THEN
+                    SELECT COALESCE(max(sort_order), 0) + 1 INTO v_max_sort
+                    FROM portal.reference_data
+                    WHERE type = v_type
+                      AND COALESCE(parent_value, '') = COALESCE(v_parent_val, '');
+
+                    INSERT INTO portal.reference_data (type, value, short_name, parent_type, parent_value, sort_order, is_active)
+                    VALUES (
+                        v_type,
+                        v_val,
+                        v_short,
+                        v_parent_type,
+                        v_parent_val,
+                        COALESCE((v_item->>'sort_order')::integer, v_max_sort),
+                        true
+                    );
+                    v_inserted_count := v_inserted_count + 1;
+                END IF;
             END IF;
         END LOOP;
-        RETURN jsonb_build_object('success', true, 'message', 'เพิ่มข้อมูลอ้างอิงแบบกลุ่มเรียบร้อยแล้ว');
+        RETURN jsonb_build_object(
+            'success', true,
+            'message', 'บันทึกข้อมูลอ้างอิงแบบกลุ่มสำเร็จ (เพิ่มใหม่ ' || v_inserted_count || ' รายการ)',
+            'inserted_count', v_inserted_count
+        );
     END IF;
 
     v_id := trim(COALESCE(p_payload->>'reference_id', ''));
+    v_type := upper(trim(COALESCE(p_payload->>'type', '')));
+    v_val := trim(COALESCE(p_payload->>'value', ''));
+    v_short := trim(COALESCE(p_payload->>'short_name', ''));
+    v_parent_type := upper(trim(COALESCE(p_payload->>'parent_type', '')));
+    v_parent_val := trim(COALESCE(p_payload->>'parent_value', ''));
+
     IF v_id = '' THEN
+        IF v_val = '' THEN
+            RAISE EXCEPTION 'กรุณาระบุค่าข้อมูล';
+        END IF;
+
+        IF EXISTS (
+            SELECT 1 FROM portal.reference_data
+            WHERE type = v_type
+              AND COALESCE(parent_value, '') = COALESCE(v_parent_val, '')
+              AND value = v_val
+        ) THEN
+            RAISE EXCEPTION 'ข้อมูล "%" มีอยู่แล้วในหมวดหรือสังกัดแม่นี้', v_val;
+        END IF;
+
         SELECT COALESCE(max(sort_order), 0) + 1 INTO v_max_sort
         FROM portal.reference_data
-        WHERE type = (p_payload->>'type');
+        WHERE type = v_type
+          AND COALESCE(parent_value, '') = COALESCE(v_parent_val, '');
 
         INSERT INTO portal.reference_data (type, value, short_name, parent_type, parent_value, sort_order, is_active)
         VALUES (
-            trim(p_payload->>'type'),
-            trim(p_payload->>'value'),
-            trim(COALESCE(p_payload->>'short_name', '')),
-            trim(COALESCE(p_payload->>'parent_type', '')),
-            trim(COALESCE(p_payload->>'parent_value', '')),
+            v_type,
+            v_val,
+            v_short,
+            v_parent_type,
+            v_parent_val,
             COALESCE((p_payload->>'sort_order')::integer, v_max_sort),
             COALESCE((p_payload->>'is_active')::boolean, true)
         )
         RETURNING reference_id INTO v_id;
     ELSE
         UPDATE portal.reference_data
-        SET type         = COALESCE(NULLIF(trim(p_payload->>'type'), ''), type),
-            value        = COALESCE(NULLIF(trim(p_payload->>'value'), ''), value),
+        SET type         = COALESCE(NULLIF(v_type, ''), type),
+            value        = COALESCE(NULLIF(v_val, ''), value),
             short_name   = COALESCE(p_payload->>'short_name', short_name),
-            parent_type  = COALESCE(p_payload->>'parent_type', parent_type),
+            parent_type  = COALESCE(NULLIF(v_parent_type, ''), parent_type),
             parent_value = COALESCE(p_payload->>'parent_value', parent_value),
             sort_order   = COALESCE((p_payload->>'sort_order')::integer, sort_order),
             is_active    = COALESCE((p_payload->>'is_active')::boolean, is_active)
@@ -1642,46 +1699,95 @@ SET search_path = portal, public
 AS $$
 DECLARE
     v_session jsonb;
-    v_mode text := COALESCE(p_payload->>'mode', 'SINGLE');
+    v_mode text := upper(COALESCE(p_payload->>'mode', p_payload->>'action', 'SINGLE'));
     v_id text;
     v_item jsonb;
     v_max_sort integer;
+    v_pos_type text;
+    v_pos_name text;
+    v_pos_level text;
+    v_inserted_count integer := 0;
 BEGIN
     v_session := portal.fn_assert_session_or_setup(p_session_token, 'ADMIN');
 
     IF v_mode = 'BATCH' AND jsonb_typeof(p_payload->'items') = 'array' THEN
         FOR v_item IN SELECT * FROM jsonb_array_elements(p_payload->'items') LOOP
-            IF trim(COALESCE(v_item->>'position_name', '')) != '' THEN
-                SELECT COALESCE(max(sort_order), 0) + 1 INTO v_max_sort FROM portal.position_structure;
-                INSERT INTO portal.position_structure (position_type, position_name, position_level, sort_order, is_active)
-                VALUES (
-                    trim(v_item->>'position_type'),
-                    trim(v_item->>'position_name'),
-                    COALESCE(NULLIF(trim(v_item->>'position_level'), ''), 'ไม่มีระดับ'),
-                    COALESCE((v_item->>'sort_order')::integer, v_max_sort),
-                    true
-                );
+            IF jsonb_typeof(v_item) = 'object' THEN
+                v_pos_type := trim(COALESCE(NULLIF(v_item->>'position_type', ''), NULLIF(p_payload->>'position_type', ''), ''));
+                v_pos_name := trim(COALESCE(v_item->>'position_name', ''));
+                v_pos_level := COALESCE(NULLIF(trim(v_item->>'position_level'), ''), 'ไม่มีระดับ');
+            ELSE
+                v_pos_type := trim(COALESCE(p_payload->>'position_type', ''));
+                v_pos_name := trim(trim(both '"' from v_item::text));
+                v_pos_level := 'ไม่มีระดับ';
+            END IF;
+
+            IF v_pos_name != '' AND v_pos_type != '' THEN
+                IF NOT EXISTS (
+                    SELECT 1 FROM portal.position_structure
+                    WHERE position_type = v_pos_type
+                      AND position_name = v_pos_name
+                      AND position_level = v_pos_level
+                ) THEN
+                    SELECT COALESCE(max(sort_order), 0) + 1 INTO v_max_sort
+                    FROM portal.position_structure
+                    WHERE position_type = v_pos_type;
+
+                    INSERT INTO portal.position_structure (position_type, position_name, position_level, sort_order, is_active)
+                    VALUES (
+                        v_pos_type,
+                        v_pos_name,
+                        v_pos_level,
+                        COALESCE((v_item->>'sort_order')::integer, v_max_sort),
+                        true
+                    );
+                    v_inserted_count := v_inserted_count + 1;
+                END IF;
             END IF;
         END LOOP;
-        RETURN jsonb_build_object('success', true, 'message', 'เพิ่มโครงสร้างตำแหน่งแบบกลุ่มเรียบร้อยแล้ว');
+        RETURN jsonb_build_object(
+            'success', true,
+            'message', 'เพิ่มโครงสร้างตำแหน่งแบบกลุ่มเรียบร้อยแล้ว (เพิ่มใหม่ ' || v_inserted_count || ' รายการ)',
+            'inserted_count', v_inserted_count
+        );
     END IF;
 
     v_id := trim(COALESCE(p_payload->>'pos_id', ''));
+    v_pos_type := trim(COALESCE(p_payload->>'position_type', ''));
+    v_pos_name := trim(COALESCE(p_payload->>'position_name', ''));
+    v_pos_level := COALESCE(NULLIF(trim(p_payload->>'position_level'), ''), 'ไม่มีระดับ');
+
     IF v_id = '' THEN
-        SELECT COALESCE(max(sort_order), 0) + 1 INTO v_max_sort FROM portal.position_structure;
+        IF v_pos_name = '' OR v_pos_type = '' THEN
+            RAISE EXCEPTION 'กรุณาระบุประเภทตำแหน่งและชื่อตำแหน่ง';
+        END IF;
+
+        IF EXISTS (
+            SELECT 1 FROM portal.position_structure
+            WHERE position_type = v_pos_type
+              AND position_name = v_pos_name
+              AND position_level = v_pos_level
+        ) THEN
+            RAISE EXCEPTION 'ตำแหน่ง "%" ระดับ "%" มีอยู่แล้วในประเภทตำแหน่งนี้', v_pos_name, v_pos_level;
+        END IF;
+
+        SELECT COALESCE(max(sort_order), 0) + 1 INTO v_max_sort
+        FROM portal.position_structure
+        WHERE position_type = v_pos_type;
+
         INSERT INTO portal.position_structure (position_type, position_name, position_level, sort_order, is_active)
         VALUES (
-            trim(p_payload->>'position_type'),
-            trim(p_payload->>'position_name'),
-            COALESCE(NULLIF(trim(p_payload->>'position_level'), ''), 'ไม่มีระดับ'),
+            v_pos_type,
+            v_pos_name,
+            v_pos_level,
             COALESCE((p_payload->>'sort_order')::integer, v_max_sort),
             COALESCE((p_payload->>'is_active')::boolean, true)
         )
         RETURNING pos_id INTO v_id;
     ELSE
         UPDATE portal.position_structure
-        SET position_type  = COALESCE(NULLIF(trim(p_payload->>'position_type'), ''), position_type),
-            position_name  = COALESCE(NULLIF(trim(p_payload->>'position_name'), ''), position_name),
+        SET position_type  = COALESCE(NULLIF(v_pos_type, ''), position_type),
+            position_name  = COALESCE(NULLIF(v_pos_name, ''), position_name),
             position_level = COALESCE(NULLIF(trim(p_payload->>'position_level'), ''), position_level),
             sort_order     = COALESCE((p_payload->>'sort_order')::integer, sort_order),
             is_active      = COALESCE((p_payload->>'is_active')::boolean, is_active)
@@ -1821,34 +1927,46 @@ BEGIN
         ('Default_Theme', 'light', 'ธีมเริ่มต้นของระบบ (light หรือ dark)')
     ON CONFLICT (key) DO NOTHING;
 
-    -- 5.2 Seed Reference_Data (คำนำหน้าชื่อ + โครงสร้างสังกัด 4 ระดับ) หากตารางยังว่าง
+    -- 5.2 Seed Reference_Data (คำนำหน้าชื่อ, สถานะ, และโครงสร้างสังกัด 4 ระดับ) หากตารางยังว่าง
     IF NOT EXISTS (SELECT 1 FROM portal.reference_data LIMIT 1) THEN
         INSERT INTO portal.reference_data (type, value, short_name, parent_type, parent_value, sort_order, is_active) VALUES
-            -- คำนำหน้าชื่อ (Prefix)
-            ('Prefix', 'นาย', '', '', '', 1, true),
-            ('Prefix', 'นาง', '', '', '', 2, true),
-            ('Prefix', 'นางสาว', '', '', '', 3, true),
-            ('Prefix', 'ว่าที่ ร.ต.', '', '', '', 4, true),
-            ('Prefix', 'ดร.', '', '', '', 5, true),
-            ('Prefix', 'พ.ต.อ.', '', '', '', 6, true),
-            -- ระดับที่ 1: สำนัก (Bureau_Name)
-            ('Bureau_Name', 'สำนักเทศกิจ', 'สนท.', '', '', 1, true),
-            -- ระดับที่ 2: สำนักงาน / กอง (Office)
-            ('Office', 'สำนักงานเลขานุการสำนักเทศกิจ', 'สลก.', 'Bureau_Name', 'สำนักเทศกิจ', 1, true),
-            ('Office', 'กองตรวจและบังคับการ', 'กตบ.', 'Bureau_Name', 'สำนักเทศกิจ', 2, true),
-            ('Office', 'กองนโยบายและแผนงาน', 'กนผ.', 'Bureau_Name', 'สำนักเทศกิจ', 3, true),
-            -- ระดับที่ 3: ฝ่าย / ส่วน (Department)
-            ('Department', 'ฝ่ายบริหารงานทั่วไป', 'ฝบท.', 'Office', 'สำนักงานเลขานุการสำนักเทศกิจ', 1, true),
-            ('Department', 'ฝ่ายการเงินและบัญชี', 'ฝกบ.', 'Office', 'สำนักงานเลขานุการสำนักเทศกิจ', 2, true),
-            ('Department', 'ฝ่ายการเจ้าหน้าที่', 'ฝกจ.', 'Office', 'สำนักงานเลขานุการสำนักเทศกิจ', 3, true),
-            ('Department', 'ส่วนตรวจและบังคับการ 1', 'สตบ.1', 'Office', 'กองตรวจและบังคับการ', 4, true),
-            ('Department', 'ส่วนตรวจและบังคับการ 2', 'สตบ.2', 'Office', 'กองตรวจและบังคับการ', 5, true),
-            ('Department', 'ส่วนตรวจและบังคับการ 3', 'สตบ.3', 'Office', 'กองตรวจและบังคับการ', 6, true),
-            -- ระดับที่ 4: กลุ่มงาน (Division)
-            ('Division', 'กลุ่มงานธุรการ', '', 'Department', 'ฝ่ายบริหารงานทั่วไป', 1, true),
-            ('Division', 'กลุ่มงานสารบรรณ', '', 'Department', 'ฝ่ายบริหารงานทั่วไป', 2, true),
-            ('Division', 'กลุ่มงานตรวจและบังคับการ 1', '', 'Department', 'ส่วนตรวจและบังคับการ 1', 3, true),
-            ('Division', 'กลุ่มงานกิจการพิเศษ', '', 'Department', 'ส่วนตรวจและบังคับการ 1', 4, true);
+            -- คำนำหน้าชื่อ (PREFIX)
+            ('PREFIX', 'นาย', '', '', '', 1, true),
+            ('PREFIX', 'นาง', '', '', '', 2, true),
+            ('PREFIX', 'นางสาว', '', '', '', 3, true),
+            ('PREFIX', 'ว่าที่ ร.ต.', '', '', '', 4, true),
+            ('PREFIX', 'ดร.', '', '', '', 5, true),
+            ('PREFIX', 'พ.ต.อ.', '', '', '', 6, true),
+            -- สถานะบุคลากร (STATUS)
+            ('STATUS', 'ทำงานอยู่', '', '', '', 1, true),
+            ('STATUS', 'ไปช่วยราชการ', '', '', '', 2, true),
+            ('STATUS', 'ช่วยราชการที่อื่น', '', '', '', 3, true),
+            ('STATUS', 'ลาศึกษาต่อ', '', '', '', 4, true),
+            ('STATUS', 'เกษียณอายุ', '', '', '', 5, true),
+            ('STATUS', 'ลาออก', '', '', '', 6, true),
+            ('STATUS', 'ให้ออก/ไล่ออก', '', '', '', 7, true),
+            -- ระดับที่ 1: สำนัก (BUREAU)
+            ('BUREAU', 'สำนักเทศกิจ', 'สนท.', '', '', 1, true),
+            -- ระดับที่ 2: สำนักงาน / กอง (OFFICE)
+            ('OFFICE', 'สำนักงานเลขานุการสำนักเทศกิจ', 'สลก.', 'BUREAU', 'สำนักเทศกิจ', 1, true),
+            ('OFFICE', 'กองตรวจและบังคับการ', 'กตบ.', 'BUREAU', 'สำนักเทศกิจ', 2, true),
+            ('OFFICE', 'กองนโยบายและแผนงาน', 'กนผ.', 'BUREAU', 'สำนักเทศกิจ', 3, true),
+            -- ระดับที่ 3: ฝ่าย / ส่วน (DEPARTMENT)
+            ('DEPARTMENT', 'ฝ่ายบริหารงานทั่วไป', 'ฝบท.', 'OFFICE', 'สำนักงานเลขานุการสำนักเทศกิจ', 1, true),
+            ('DEPARTMENT', 'ฝ่ายการเงินและบัญชี', 'ฝกบ.', 'OFFICE', 'สำนักงานเลขานุการสำนักเทศกิจ', 2, true),
+            ('DEPARTMENT', 'ฝ่ายการเจ้าหน้าที่', 'ฝกจ.', 'OFFICE', 'สำนักงานเลขานุการสำนักเทศกิจ', 3, true),
+            ('DEPARTMENT', 'ส่วนตรวจและบังคับการ 1', 'สตบ.1', 'OFFICE', 'กองตรวจและบังคับการ', 4, true),
+            ('DEPARTMENT', 'ส่วนตรวจและบังคับการ 2', 'สตบ.2', 'OFFICE', 'กองตรวจและบังคับการ', 5, true),
+            ('DEPARTMENT', 'ส่วนตรวจและบังคับการ 3', 'สตบ.3', 'OFFICE', 'กองตรวจและบังคับการ', 6, true),
+            -- ระดับที่ 4: กลุ่มงาน (DIVISION)
+            ('DIVISION', 'กลุ่มงานธุรการ', '', 'DEPARTMENT', 'ฝ่ายบริหารงานทั่วไป', 1, true),
+            ('DIVISION', 'กลุ่มงานสารบรรณ', '', 'DEPARTMENT', 'ฝ่ายบริหารงานทั่วไป', 2, true),
+            ('DIVISION', 'กลุ่มงานปฏิบัติการ', '', 'DEPARTMENT', 'ส่วนตรวจและบังคับการ 1', 1, true),
+            ('DIVISION', 'กลุ่มงานกิจการพิเศษ', '', 'DEPARTMENT', 'ส่วนตรวจและบังคับการ 1', 2, true),
+            ('DIVISION', 'กลุ่มงานปฏิบัติการ', '', 'DEPARTMENT', 'ส่วนตรวจและบังคับการ 2', 1, true),
+            ('DIVISION', 'กลุ่มงานกิจการพิเศษ', '', 'DEPARTMENT', 'ส่วนตรวจและบังคับการ 2', 2, true),
+            ('DIVISION', 'กลุ่มงานปฏิบัติการ', '', 'DEPARTMENT', 'ส่วนตรวจและบังคับการ 3', 1, true),
+            ('DIVISION', 'กลุ่มงานกิจการพิเศษ', '', 'DEPARTMENT', 'ส่วนตรวจและบังคับการ 3', 2, true);
     END IF;
 
     -- 5.3 Seed Position_Structure ครบทั้ง 6 ประเภทของ กทม. หากตารางยังว่าง
