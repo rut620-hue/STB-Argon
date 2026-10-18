@@ -62,9 +62,13 @@
   function resolveWebappTargetUrl(rawUrl, ssoToken) {
     if (!rawUrl) return '';
     var target = String(rawUrl).trim();
-    if (!/^https?:\/\//i.test(target)) {
-      var baseDir = window.location.origin + window.location.pathname.replace(/\/index\.html$/i, '').replace(/\/$/, '');
-      target = baseDir + '/' + target.replace(/^\//, '');
+    try {
+      target = new URL(target, window.location.href).href;
+    } catch (e) {
+      if (!/^https?:\/\//i.test(target)) {
+        var baseDir = window.location.origin + window.location.pathname.replace(/\/index\.html$/i, '').replace(/\/$/, '');
+        target = baseDir + '/' + target.replace(/^\//, '');
+      }
     }
     var sep = target.indexOf('?') === -1 ? '?' : '&';
     return target + sep + 'sso_token=' + encodeURIComponent(ssoToken);

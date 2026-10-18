@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ระบบตัวอย่างทดสอบ SSO (Sample Sub-App) — สตบ.สนท.</title>
+
+  <!-- Google Fonts & Font Awesome Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- SweetAlert2 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.5/dist/sweetalert2.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.5/dist/sweetalert2.all.min.js"></script>
+
+  <!-- Central Design System CSS -->
+  <link rel="stylesheet" href="../Portal-SSO/assets/css/portal.css">
+
+  <style>
+    .subapp-header {
+      background: linear-gradient(120deg, var(--sb1), var(--sb2) 60%, var(--sb3));
+      color: #ffffff;
+      padding: 1rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: var(--shadow-md);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .subapp-container {
+      max-width: 1200px;
+      margin: 1.5rem auto;
+      padding: 0 1.25rem 3rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    .field-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 0.75rem;
+    }
+    .field-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      padding: 0.65rem 0.9rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+    .field-card .key-name {
+      font-size: 0.76rem;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .field-card .val-data {
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: var(--text);
+      word-break: break-all;
+    }
+    pre.code-json {
+      background: #0d1117;
+      color: #56d364;
+      padding: 1.25rem;
+      border-radius: 0.85rem;
+      overflow-x: auto;
+      font-family: Consolas, Monaco, monospace;
+      font-size: 0.85rem;
+      line-height: 1.5;
+      max-height: 380px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sub-App Header Bar -->
+  <header class="subapp-header">
+    <div style="display:flex;align-items:center;gap:1rem;">
+      <img src="https://pr-bangkok.com/wp-content/uploads/2025/06/231116_BMA-Emblem_Edited_Green-600x600.png" alt="BMA Emblem" style="width:42px;height:42px;background:rgba(255,255,255,0.12);padding:3px;border-radius:0.5rem;object-fit:contain;">
+      <div>
+        <div style="font-weight:800;font-size:1.1rem;display:flex;align-items:center;gap:0.6rem;">
+          ระบบตัวอย่างทดสอบ SSO (Sample Sub-App)
+          <span class="chip" style="background:rgba(255,255,255,0.2);color:#fff;font-size:0.75rem;">APP0001</span>
+        </div>
+        <div style="font-size:0.82rem;color:rgba(255,255,255,0.85);">ส่วนตรวจและบังคับการ สำนักเทศกิจ กรุงเทพมหานคร</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:0.75rem;">
+      <a href="../Portal-SSO/index.html" class="btn btn-outline" style="color:#ffffff;border-color:rgba(255,255,255,0.3);background:rgba(255,255,255,0.1);">
+        <i class="fa-solid fa-house"></i> กลับสู่ Central Portal
+      </a>
+      <button type="button" class="btn btn-danger btn-sm" onclick="handleSubAppLogout()">
+        <i class="fa-solid fa-arrow-right-from-bracket"></i> ออกจากระบบ
+      </button>
+    </div>
+  </header>
+
+  <main class="subapp-container">
+
+    <!-- Hero Card: ข้อมูลผู้ใช้งานที่ผ่านการรับรองจาก SSO -->
+    <div class="card" style="border-left:5px solid var(--g1);">
+      <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:1rem;">
+        <div style="display:flex;align-items:center;gap:1.25rem;">
+          <img id="userAvatarImg" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="User Avatar" style="width:68px;height:68px;border-radius:50%;object-fit:cover;border:2px solid var(--border);box-shadow:var(--shadow-sm);">
+          <div>
+            <div style="font-size:1.25rem;font-weight:800;color:var(--text);" id="userFullName">กำลังตรวจสอบสิทธิ์ SSO...</div>
+            <div style="font-size:0.9rem;color:var(--muted);margin-top:0.15rem;" id="userPosAndDept">กรุณารอสักครู่...</div>
+            <div style="display:flex;gap:0.5rem;margin-top:0.4rem;" id="userBadges">
+              <span class="chip" id="userRoleChip">ROLE</span>
+              <span class="chip green" id="userAccessLevelChip">ACCESS: ...</span>
+            </div>
+          </div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:0.8rem;color:var(--muted);">สถานะการตรวจสอบความปลอดภัย</div>
+          <div style="font-size:1.05rem;font-weight:800;color:var(--g1);"><i class="fa-solid fa-circle-check"></i> SSO Authenticated</div>
+          <div style="font-size:0.78rem;color:var(--muted);margin-top:0.2rem;" id="ssoTimestamp"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 1: ข้อมูลผู้ใช้งาน 38 ฟิลด์ (SSO Payload Fields) -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <i class="fa-solid fa-id-badge" style="color:var(--g1);"></i> ข้อมูลผู้ใช้งานครบ 38 ฟิลด์ (SSO User Payload)
+        </div>
+        <div style="display:flex;gap:0.5rem;">
+          <button type="button" class="btn btn-sm btn-outline" onclick="toggleRawJson()">
+            <i class="fa-solid fa-code"></i> สลับดู JSON ดิบ
+          </button>
+        </div>
+      </div>
+      <p style="font-size:0.9rem;color:var(--muted);margin-top:0;">
+        โครงสร้างข้อมูลผู้ใช้ที่ได้รับจากการทำ Handshake บัตรผ่าน Single Sign-On (รองรับทั้ง PascalCase และ camelCase ตามมาตรฐานระบบ):
+      </p>
+
+      <div id="fieldGridBox" class="field-grid"></div>
+
+      <div id="rawJsonBox" style="display:none;margin-top:1rem;">
+        <pre class="code-json" id="rawJsonContent"></pre>
+      </div>
+    </div>
+
+    <!-- Section 2: ทดสอบการเรียกใช้งาน Central Master Data ผ่าน SSO Guard -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <i class="fa-solid fa-database" style="color:var(--blue);"></i> ทดสอบเรียกใช้ Central Master Data ผ่าน STB_SSO SDK
+        </div>
+      </div>
+      <p style="font-size:0.9rem;color:var(--muted);margin-top:0;">
+        เว็บแอปย่อยสามารถดึงข้อมูลทำเนียบบุคลากร โครงสร้างสังกัด และตำแหน่งขององค์กรผ่าน <code>STB_SSO</code> ได้โดยตรง:
+      </p>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:1rem;margin-top:0.5rem;">
+        <!-- Test 1: Personnel -->
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:1rem;padding:1.15rem;display:flex;flex-direction:column;justify-content:space-between;gap:0.75rem;">
+          <div>
+            <div style="font-weight:700;color:var(--text);font-size:0.96rem;"><i class="fa-solid fa-users"></i> ดึงทำเนียบบุคลากร</div>
+            <div style="font-size:0.84rem;color:var(--muted);">เรียก <code>STB_SSO.getPersonnelList()</code></div>
+          </div>
+          <button type="button" class="btn btn-sm btn-primary" onclick="testFetchPersonnel()">
+            <i class="fa-solid fa-download"></i> ทดสอบดึงบุคลากร
+          </button>
+        </div>
+
+        <!-- Test 2: Reference Data -->
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:1rem;padding:1.15rem;display:flex;flex-direction:column;justify-content:space-between;gap:0.75rem;">
+          <div>
+            <div style="font-weight:700;color:var(--text);font-size:0.96rem;"><i class="fa-solid fa-sitemap"></i> ดึงโครงสร้างสังกัด 4 ระดับ</div>
+            <div style="font-size:0.84rem;color:var(--muted);">เรียก <code>STB_SSO.getReferenceData()</code></div>
+          </div>
+          <button type="button" class="btn btn-sm btn-primary" onclick="testFetchReferenceData()">
+            <i class="fa-solid fa-download"></i> ทดสอบดึงสังกัด
+          </button>
+        </div>
+
+        <!-- Test 3: Position Structure -->
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:1rem;padding:1.15rem;display:flex;flex-direction:column;justify-content:space-between;gap:0.75rem;">
+          <div>
+            <div style="font-weight:700;color:var(--text);font-size:0.96rem;"><i class="fa-solid fa-briefcase"></i> ดึงโครงสร้างตำแหน่ง กทม.</div>
+            <div style="font-size:0.84rem;color:var(--muted);">เรียก <code>STB_SSO.getPositionStructure()</code></div>
+          </div>
+          <button type="button" class="btn btn-sm btn-primary" onclick="testFetchPositionStructure()">
+            <i class="fa-solid fa-download"></i> ทดสอบดึงตำแหน่ง
+          </button>
+        </div>
+      </div>
+
+      <!-- Result Area for Master Data Tests -->
+      <div id="masterDataResultBox" style="display:none;margin-top:1.25rem;border-top:1px dashed var(--border);padding-top:1rem;">
+        <div style="font-weight:700;color:var(--text);margin-bottom:0.5rem;" id="masterDataResultTitle">ผลลัพธ์การทดสอบ:</div>
+        <div id="masterDataResultContent" class="tbl-wrap" style="max-height:260px;overflow-y:auto;"></div>
+      </div>
+    </div>
+
+    <!-- Section 3: ทดสอบการอัปโหลดไฟล์เข้า Google Drive จากแอปย่อย -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <i class="fa-brands fa-google-drive" style="color:#FB8C00;"></i> ทดสอบอัปโหลดไฟล์เข้า Google Drive จากเว็บแอปย่อย
+        </div>
+      </div>
+      <p style="font-size:0.9rem;color:var(--muted);margin-top:0;">
+        ใช้โมดูล <code>STB_DRIVE.uploadToDrive(file, { folderId, fileName })</code> ส่งไฟล์ตรงไปยัง Cloud Storage ของ สตบ.สนท.:
+      </p>
+
+      <div style="display:flex;flex-wrap:wrap;gap:0.75rem;align-items:center;">
+        <input type="file" id="subappTestFileInput" class="inp" style="max-width:340px;">
+        <button type="button" class="btn btn-amber" onclick="testSubAppDriveUpload()">
+          <i class="fa-solid fa-cloud-arrow-up"></i> ทดสอบอัปโหลดขึ้น Drive
+        </button>
+      </div>
+
+      <div id="uploadResultBox" style="display:none;margin-top:1rem;background:var(--surface2);padding:1rem;border-radius:0.75rem;border:1px solid var(--border);">
+        <div style="font-weight:700;color:var(--text);" id="uploadResultTitle"></div>
+        <div id="uploadResultUrl" style="font-size:0.88rem;word-break:break-all;margin-top:0.25rem;"></div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Shared & Portal Scripts -->
+  <script src="../Portal-SSO/assets/js/portal-config.js"></script>
+  <script src="../shared/stb-loader.js"></script>
+  <script src="../shared/stb-drive-upload.js"></script>
+  <script src="../shared/stb-sso-guard.js"></script>
+
+  <script>
+    var CURRENT_USER = null;
+    var CURRENT_ACCESS_LEVEL = 'None';
+
+    document.addEventListener('DOMContentLoaded', async function () {
+      try {
+        if (window.LOADER) {
+          window.LOADER.brandBoot({
+            title: 'ระบบตัวอย่างทดสอบ SSO (Sample Sub-App)',
+            sub: 'กำลังยืนยันบัตรผ่าน SSO กับ Central Portal...',
+            msg: 'กำลังตรวจสอบ Token และโหลดข้อมูลผู้ใช้งาน...'
+          });
+        }
+
+        // 1. เรียกใช้งาน SSO Guard เพื่อตรวจสอบ Token และรับสิทธิ์
+        var ssoResult = await window.STB_SSO.requireSSO({
+          webappId: 'APP0001',
+          portalUrl: '../Portal-SSO/index.html'
+        });
+
+        CURRENT_USER = ssoResult.user || window.STB_SSO.getUser() || {};
+        CURRENT_ACCESS_LEVEL = ssoResult.accessLevel || window.STB_SSO.getAccessLevel() || 'USER';
+
+        renderSubAppUser(CURRENT_USER, CURRENT_ACCESS_LEVEL);
+      } catch (err) {
+        console.error('SSO Initialization Error:', err);
+        Swal.fire({
+          icon: 'error',
+          title: 'การยืนยันสิทธิ์ SSO ล้มเหลว',
+          text: err.message || 'ไม่สามารถเข้าใช้งานได้ กรุณาเข้าสู่ระบบผ่าน Central Portal',
+          confirmButtonText: 'กลับสู่ Central Portal'
+        }).then(function () {
+          window.location.href = '../Portal-SSO/index.html';
+        });
+      } finally {
+        if (window.LOADER) window.LOADER.hide();
+      }
+    });
+
+    function renderSubAppUser(u, accessLevel) {
+      var photo = u.photoUrl || u.PhotoUrl || u.photo_url || '';
+      var photoResolved = window.STB_DRIVE ? window.STB_DRIVE.resolveDriveImageUrl(photo) : photo;
+      if (photoResolved) {
+        document.getElementById('userAvatarImg').src = photoResolved;
+      }
+
+      var fullName = u.fullName || u.FullName || ((u.prefix || '') + (u.firstName || '') + ' ' + (u.lastName || '')) || u.username || 'ผู้ใช้งานระบบ';
+      document.getElementById('userFullName').textContent = fullName;
+
+      var position = u.position || u.Position || '-';
+      var dept = u.department || u.Department || u.office || u.Office || '-';
+      document.getElementById('userPosAndDept').textContent = position + ' • ' + dept;
+
+      var role = u.role || u.Role || 'USER';
+      document.getElementById('userRoleChip').textContent = 'ROLE: ' + role;
+      document.getElementById('userAccessLevelChip').textContent = 'APP0001: ' + accessLevel;
+
+      document.getElementById('ssoTimestamp').textContent = 'ตรวจสอบสิทธิ์เมื่อ: ' + new Date().toLocaleTimeString('th-TH');
+
+      // เรนเดอร์ 38 ฟิลด์ลงใน Grid
+      render38Fields(u);
+
+      // ใส่ JSON ดิบ
+      document.getElementById('rawJsonContent').textContent = JSON.stringify(u, null, 2);
+    }
+
+    function render38Fields(u) {
+      var grid = document.getElementById('fieldGridBox');
+      if (!grid) return;
+
+      var fieldsDef = [
+        { label: 'รหัสบุคลากร', keys: ['personnelId', 'PersonnelId', 'personnel_id'] },
+        { label: 'เลขบัตรประชาชน', keys: ['idCard', 'IdCard', 'id_card_number'] },
+        { label: 'คำนำหน้าชื่อ', keys: ['prefix', 'Prefix'] },
+        { label: 'ชื่อจริง', keys: ['firstName', 'FirstName', 'first_name'] },
+        { label: 'นามสกุล', keys: ['lastName', 'LastName', 'last_name'] },
+        { label: 'ชื่อ-นามสกุลเต็ม', keys: ['fullName', 'FullName', 'full_name'] },
+        { label: 'ประเภทตำแหน่ง', keys: ['positionType', 'PositionType', 'position_type'] },
+        { label: 'สายงาน / ตำแหน่ง', keys: ['position', 'Position'] },
+        { label: 'ระดับตำแหน่ง', keys: ['positionLevel', 'PositionLevel', 'position_level'] },
+        { label: 'ตำแหน่งบริหาร', keys: ['position_2', 'Position2'] },
+        { label: 'สำนัก', keys: ['bureauName', 'BureauName', 'bureau_name'] },
+        { label: 'สำนักงาน / กอง', keys: ['office', 'Office'] },
+        { label: 'ฝ่าย / ส่วน', keys: ['department', 'Department'] },
+        { label: 'กลุ่มงาน', keys: ['division', 'Division'] },
+        { label: 'ปีเริ่มรับราชการ (พ.ศ.)', keys: ['startServiceYearBe', 'StartServiceYearBe', 'start_service_year_be'] },
+        { label: 'เงินเดือนปัจจุบัน', keys: ['currentSalary', 'CurrentSalary', 'current_salary'] },
+        { label: 'สถานะการทำงาน', keys: ['personnelStatus', 'PersonnelStatus', 'status'] },
+        { label: 'ชื่อผู้ใช้งาน (Username)', keys: ['username', 'Username'] },
+        { label: 'อีเมล', keys: ['email', 'Email'] },
+        { label: 'บทบาทระบบ (Role)', keys: ['role', 'Role'] },
+        { label: 'สถานะบัญชี', keys: ['userStatus', 'UserStatus'] },
+        { label: 'สิทธิ์แอปนี้ (Access Level)', keys: ['access_level', 'AccessLevel'] },
+        { label: 'URL รูปโปรไฟล์', keys: ['photoUrl', 'PhotoUrl', 'photo_url'] },
+        { label: 'URL ลายเซ็น', keys: ['signatureUrl', 'SignatureUrl', 'signature_url'] },
+        { label: 'แก้ไขชื่อผู้ใช้แล้วหรือไม่', keys: ['username_changed', 'UsernameChanged'] },
+        { label: 'หมดอายุ Token', keys: ['sso_token_expires_at', 'expires_at'] }
+      ];
+
+      var html = '';
+      fieldsDef.forEach(function (def) {
+        var val = null;
+        for (var i = 0; i < def.keys.length; i++) {
+          if (u[def.keys[i]] !== undefined && u[def.keys[i]] !== null && u[def.keys[i]] !== '') {
+            val = u[def.keys[i]];
+            break;
+          }
+        }
+        var displayVal = (val !== null && val !== undefined) ? String(val) : '<span style="color:var(--muted);font-weight:400;">- ไม่มีข้อมูล -</span>';
+        html += ''
+          + '<div class="field-card">'
+          + '  <div class="key-name">' + def.label + ' <code style="font-size:0.7rem;">(' + def.keys[0] + ')</code></div>'
+          + '  <div class="val-data">' + displayVal + '</div>'
+          + '</div>';
+      });
+
+      grid.innerHTML = html;
+    }
+
+    function toggleRawJson() {
+      var box = document.getElementById('rawJsonBox');
+      if (box.style.display === 'none') {
+        box.style.display = 'block';
+      } else {
+        box.style.display = 'none';
+      }
+    }
+
+    // =========================================================================
+    // Master Data Tests
+    // =========================================================================
+    async function testFetchPersonnel() {
+      try {
+        if (window.LOADER) window.LOADER.busy(Promise.resolve(), 'กำลังดึงทำเนียบบุคลากรผ่าน SSO Guard...');
+        var list = await window.STB_SSO.getPersonnelList();
+        var resBox = document.getElementById('masterDataResultBox');
+        var resTitle = document.getElementById('masterDataResultTitle');
+        var resContent = document.getElementById('masterDataResultContent');
+
+        resTitle.innerHTML = '<i class="fa-solid fa-users"></i> ผลลัพธ์ทำเนียบบุคลากร (พบทั้งหมด ' + (list ? list.length : 0) + ' รายการ):';
+        var tableHtml = ''
+          + '<table class="tbl">'
+          + '  <thead>'
+          + '    <tr>'
+          + '      <th>#</th>'
+          + '      <th>รหัส</th>'
+          + '      <th>ชื่อ-นามสกุล</th>'
+          + '      <th>ตำแหน่ง</th>'
+          + '      <th>สังกัด</th>'
+          + '      <th>สถานะ</th>'
+          + '    </tr>'
+          + '  </thead>'
+          + '  <tbody>';
+
+        (list || []).slice(0, 10).forEach(function (p, idx) {
+          tableHtml += ''
+            + '<tr>'
+            + '  <td>' + (idx + 1) + '</td>'
+            + '  <td><code>' + (p.personnel_id || p.Personnel_ID || '-') + '</code></td>'
+            + '  <td style="font-weight:600;">' + (p.full_name || (p.prefix || '') + p.first_name + ' ' + p.last_name) + '</td>'
+            + '  <td>' + (p.position || '-') + '</td>'
+            + '  <td>' + (p.office || '-') + '</td>'
+            + '  <td><span class="chip">' + (p.status || '-') + '</span></td>'
+            + '</tr>';
+        });
+
+        tableHtml += '</tbody></table>';
+        if (list && list.length > 10) {
+          tableHtml += '<div style="font-size:0.8rem;color:var(--muted);margin-top:0.5rem;text-align:right;">* แสดง 10 รายการแรกจากทั้งหมด ' + list.length + ' รายการ</div>';
+        }
+
+        resContent.innerHTML = tableHtml;
+        resBox.style.display = 'block';
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'success',
+          title: 'ดึงข้อมูลบุคลากรสำเร็จ (' + (list ? list.length : 0) + ' รายการ)',
+          showConfirmButton: false,
+          timer: 2500
+        });
+      } catch (err) {
+        Swal.fire({ icon: 'error', title: 'ดึงข้อมูลบุคลากรไม่สำเร็จ', text: err.message });
+      } finally {
+        if (window.LOADER) window.LOADER.hide();
+      }
+    }
+
+    async function testFetchReferenceData() {
+      try {
+        if (window.LOADER) window.LOADER.busy(Promise.resolve(), 'กำลังดึงโครงสร้างสังกัดผ่าน SSO Guard...');
+        var list = await window.STB_SSO.getReferenceData();
+        var resBox = document.getElementById('masterDataResultBox');
+        var resTitle = document.getElementById('masterDataResultTitle');
+        var resContent = document.getElementById('masterDataResultContent');
+
+        resTitle.innerHTML = '<i class="fa-solid fa-sitemap"></i> ผลลัพธ์โครงสร้างสังกัดและตัวเลือก (พบทั้งหมด ' + (list ? list.length : 0) + ' รายการ):';
+        var tableHtml = ''
+          + '<table class="tbl">'
+          + '  <thead>'
+          + '    <tr>'
+          + '      <th>ประเภท (Type)</th>'
+          + '      <th>ค่าข้อมูล (Value)</th>'
+          + '      <th>ชื่อย่อ (Short Name)</th>'
+          + '      <th>สังกัดแม่ (Parent)</th>'
+          + '    </tr>'
+          + '  </thead>'
+          + '  <tbody>';
+
+        (list || []).slice(0, 10).forEach(function (r) {
+          tableHtml += ''
+            + '<tr>'
+            + '  <td><span class="chip">' + (r.type || '-') + '</span></td>'
+            + '  <td style="font-weight:600;">' + (r.value || '-') + '</td>'
+            + '  <td>' + (r.short_name || '-') + '</td>'
+            + '  <td>' + (r.parent_value || '-') + '</td>'
+            + '</tr>';
+        });
+
+        tableHtml += '</tbody></table>';
+        if (list && list.length > 10) {
+          tableHtml += '<div style="font-size:0.8rem;color:var(--muted);margin-top:0.5rem;text-align:right;">* แสดง 10 รายการแรกจากทั้งหมด ' + list.length + ' รายการ</div>';
+        }
+
+        resContent.innerHTML = tableHtml;
+        resBox.style.display = 'block';
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'success',
+          title: 'ดึงโครงสร้างสังกัดสำเร็จ (' + (list ? list.length : 0) + ' รายการ)',
+          showConfirmButton: false,
+          timer: 2500
+        });
+      } catch (err) {
+        Swal.fire({ icon: 'error', title: 'ดึงโครงสร้างสังกัดไม่สำเร็จ', text: err.message });
+      } finally {
+        if (window.LOADER) window.LOADER.hide();
+      }
+    }
+
+    async function testFetchPositionStructure() {
+      try {
+        if (window.LOADER) window.LOADER.busy(Promise.resolve(), 'กำลังดึงโครงสร้างตำแหน่งผ่าน SSO Guard...');
+        var list = await window.STB_SSO.getPositionStructure();
+        var resBox = document.getElementById('masterDataResultBox');
+        var resTitle = document.getElementById('masterDataResultTitle');
+        var resContent = document.getElementById('masterDataResultContent');
+
+        resTitle.innerHTML = '<i class="fa-solid fa-briefcase"></i> ผลลัพธ์โครงสร้างตำแหน่ง 6 ประเภท (พบทั้งหมด ' + (list ? list.length : 0) + ' ตำแหน่ง):';
+        var tableHtml = ''
+          + '<table class="tbl">'
+          + '  <thead>'
+          + '    <tr>'
+          + '      <th>ประเภทตำแหน่ง</th>'
+          + '      <th>ชื่อตำแหน่ง</th>'
+          + '      <th>ระดับตำแหน่ง</th>'
+          + '    </tr>'
+          + '  </thead>'
+          + '  <tbody>';
+
+        (list || []).slice(0, 10).forEach(function (p) {
+          tableHtml += ''
+            + '<tr>'
+            + '  <td><span class="chip">' + (p.position_type || '-') + '</span></td>'
+            + '  <td style="font-weight:600;">' + (p.position_name || '-') + '</td>'
+            + '  <td>' + (p.position_level || 'ไม่มีระดับ') + '</td>'
+            + '</tr>';
+        });
+
+        tableHtml += '</tbody></table>';
+        if (list && list.length > 10) {
+          tableHtml += '<div style="font-size:0.8rem;color:var(--muted);margin-top:0.5rem;text-align:right;">* แสดง 10 รายการแรกจากทั้งหมด ' + list.length + ' รายการ</div>';
+        }
+
+        resContent.innerHTML = tableHtml;
+        resBox.style.display = 'block';
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'success',
+          title: 'ดึงโครงสร้างตำแหน่งสำเร็จ (' + (list ? list.length : 0) + ' ตำแหน่ง)',
+          showConfirmButton: false,
+          timer: 2500
+        });
+      } catch (err) {
+        Swal.fire({ icon: 'error', title: 'ดึงโครงสร้างตำแหน่งไม่สำเร็จ', text: err.message });
+      } finally {
+        if (window.LOADER) window.LOADER.hide();
+      }
+    }
+
+    // =========================================================================
+    // Drive Upload Test
+    // =========================================================================
+    async function testSubAppDriveUpload() {
+      var fileInput = document.getElementById('subappTestFileInput');
+      if (!fileInput || !fileInput.files || !fileInput.files[0]) {
+        Swal.fire({ icon: 'warning', title: 'กรุณาเลือกไฟล์ที่ต้องการทดสอบอัปโหลด' });
+        return;
+      }
+
+      var file = fileInput.files[0];
+      try {
+        if (window.LOADER) window.LOADER.busy(Promise.resolve(), 'กำลังอัปโหลดไฟล์เข้า Google Drive จากแอปย่อย...');
+        var res = await window.STB_DRIVE.uploadToDrive({
+          file: file,
+          fileName: 'SUBAPP_TEST_' + Date.now() + '_' + file.name
+        });
+
+        var finalUrl = (res && (res.fileUrl || res.downloadUrl)) || '';
+        var box = document.getElementById('uploadResultBox');
+        var t = document.getElementById('uploadResultTitle');
+        var u = document.getElementById('uploadResultUrl');
+
+        t.innerHTML = '<i class="fa-solid fa-circle-check" style="color:var(--g1);"></i> อัปโหลดเข้า Google Drive สำเร็จ!';
+        u.innerHTML = 'URL ไฟล์: <a href="' + finalUrl + '" target="_blank" style="color:var(--g1);font-weight:700;">' + finalUrl + '</a>';
+        box.style.display = 'block';
+
+        Swal.fire({ icon: 'success', title: 'อัปโหลดสำเร็จ!', text: 'ไฟล์ถูกจัดเก็บใน Google Drive เรียบร้อยแล้ว' });
+      } catch (err) {
+        Swal.fire({ icon: 'error', title: 'อัปโหลดไฟล์ไม่สำเร็จ', text: err.message });
+      } finally {
+        if (window.LOADER) window.LOADER.hide();
+      }
+    }
+
+    function handleSubAppLogout() {
+      Swal.fire({
+        title: 'ยืนยันการออกจากระบบ',
+        text: 'คุณต้องการออกจากระบบและกลับสู่ Central Portal ใช่หรือไม่?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'ออกจากระบบ',
+        cancelButtonText: 'ยกเลิก',
+        confirmButtonColor: '#E53935'
+      }).then(function (r) {
+        if (r.isConfirmed) {
+          window.STB_SSO.logout('../Portal-SSO/index.html');
+        }
+      });
+    }
+  </script>
+</body>
+</html>
+

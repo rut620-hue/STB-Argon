@@ -2,22 +2,26 @@
 
 ## 1. ภาพรวมและเฟสปัจจุบัน
 - **ชื่อโปรเจกต์:** STB APP n2 (Central Portal & SSO)
-- **สถานะปัจจุบัน:** **🟢 เฟส 1A, 🔵 เฟส 1B และ 🟡 เฟส 1C เสร็จสมบูรณ์ 100%** พร้อมเริ่ม **🟣 เฟส 1D (ระบบจัดการ Admin/Superadmin & แอปย่อยตัวอย่าง)**
+- **สถานะปัจจุบัน:** **🎉 เฟส 1 (1A, 1B, 1C, 1D) เสร็จสมบูรณ์ครบถ้วน 100%!**
+- **สถาปัตยกรรม:** ปรับโครงสร้างสู่ `WebApp/` ครบวงจร (`WebApp/shared/`, `WebApp/Portal-SSO/`, `WebApp/sample-subapp/`) พร้อม Root Redirector `index.html`
 
 ## 2. การเชื่อมต่อระบบภายนอก (Connected Ecosystem)
 - **GitHub:** `https://github.com/rut620-hue/STB-Argon.git` (Branch: `main`)
+- **GitHub Pages:** `https://rut620-hue.github.io/STB-Argon/`
 - **GAS Microservice (`@1`):** `https://script.google.com/macros/s/AKfycbzDR2f1LIawaz6fh4gfEJ6yeIpD7yHG2oWDT07qOpbCpmTpYAExF_O2-KoFeeVnAJsyeA/exec`
-- **Supabase Project:** `ycyefnsfamlhnwgizavs` (Schema: `portal` — 8 ตาราง 68 คอลัมน์ + 26 RPCs)
+- **Supabase Project:** `ycyefnsfamlhnwgizavs` (PostgreSQL 17.11 — Schema: `portal` 8 ตาราง + 26 RPCs)
 
-## 3. งานที่เพิ่งทำเสร็จล่าสุด (Recent Completed - Phase 1C)
-- สร้าง `index.html`, `assets/js/portal-config.js`, และ `assets/js/portal-api.js` เชื่อมต่อ 26 RPCs ใน Schema `portal`
-- สร้าง `assets/js/portal-app.js` ครอบคลุมระบบ First-Time Setup Bypass, หน้า Login, สมัครสมาชิก 3 ขั้นตอน (ตรวจเลขบัตร 13 หลัก Modulo-11 + Cascading Dropdowns), หน้า `#dashboard` (ส่งต่อ SSO Handshake Token), และหน้า `#profile` (อัปโหลดรูปโปรไฟล์ + กระดานวาดลายเซ็น HTML5 Canvas)
+## 3. งานที่เสร็จสมบูรณ์ในเฟส 1D (Recent Completed - Phase 1D)
+- ย้ายโครงสร้างโปรเจกต์เข้า `WebApp/` และสร้าง Root Redirector `index.html`
+- พัฒนา `WebApp/Portal-SSO/assets/js/portal-admin.js` ครบทั้ง 6 โมดูลแอดมิน: `#personnel` (20 คอลัมน์), `#users` (Seamless Auto-Login ใน Setup Mode), `#webapps`, `#reference` (`▲▼` & Batch), `#positions` (`▲▼` & Batch), และ `#settings` (13 Keys & Reset)
+- พัฒนาเว็บแอปย่อยตัวอย่าง `WebApp/sample-subapp/index.html` ทดสอบ SSO Handshake 38 ฟิลด์, Master Data และ Drive Upload
+- แก้ไขจุด Integration Mismatch ข้ามไฟล์ (`stb-loader.js`, `portal-config.js`, `stb-sso-guard.js`) และรัน SQL Patch หมวด B2 บน Supabase จริงสำเร็จ
 
-## 4. งานถัดไปที่ต้องทำต่อ (Next Action Items - Phase 1D)
-1. พัฒนา `assets/js/portal-admin.js` ครบทั้ง 6 โมดูลผู้ดูแลระบบ: `#personnel`, `#users` (ผูกบัญชี SUPERADMIN คนแรกแล้ว Auto-Login ทันที), `#webapps`, `#reference`, `#positions` (Batch Add & เลื่อนลำดับ `▲▼`), และ `#settings` (ครบ 13 Keys + ปุ่ม `รีเซ็ตข้อมูลทดสอบ`)
-2. สร้างเว็บแอปย่อยตัวอย่าง `apps/sample-subapp/index.html` เพื่อทดสอบ SSO ครบวงจร
+## 4. งานถัดไปที่ต้องทำต่อ (Next Action Items - Phase 2)
+1. พัฒนาเว็บแอปพลิเคชันย่อยเฉพาะทางของส่วนตรวจและบังคับการ (เช่น ระบบตรวจจับกุม/เปรียบเทียบปรับ)
+2. เชื่อมต่อฐานข้อมูล Schema `app_<ชื่อระบบ>` บน Supabase เพื่อแยกตรรกะและข้อมูลจากระบบแกนกลาง
 
 ## 5. พิกัดเอกสารสำคัญ
 - แผนผังโค้ดและเลขบรรทัด: `Wiki/Code_Map.md`
-- โครงสร้างฐานข้อมูล: `Wiki/Database_Schema.md`
-- แผนงานและรายการงาน: `Working/implementation_plan.md` และ `Working/task.md`
+- แผนแม่บทโปรเจกต์: `Working/Master_plan.md`
+- ศูนย์รวม URL: `Working/system_urls.md`

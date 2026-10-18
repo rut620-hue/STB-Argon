@@ -3,10 +3,13 @@
 > [!IMPORTANT]
 > เอกสารรวบรวม URL, Script ID, และ Project Reference ของโปรเจกต์ **STB APP n2** (สำหรับรหัสผ่านฐานข้อมูลถูกแยกเก็บไว้ในไฟล์ `.env.local` ซึ่งอยู่ใน `.gitignore` เพื่อความปลอดภัยในการ Push ขึ้น GitHub)
 
-## 1. GitHub Repository (ยืนยันการเชื่อมต่อสำเร็จ ✅)
+## 1. GitHub Repository & Deployment URLs (ยืนยันการเชื่อมต่อสำเร็จ ✅)
 - **Repository URL:** `https://github.com/rut620-hue/STB-Argon.git`
 - **Branch หลัก:** `main`
-- **GitHub Pages URL (เมื่อเปิดใช้งาน):** `https://rut620-hue.github.io/STB-Argon/`
+- **GitHub Pages URLs (เปิดใช้งาน):**
+  - **Root Redirector:** `https://rut620-hue.github.io/STB-Argon/`
+  - **Central Portal & SSO:** `https://rut620-hue.github.io/STB-Argon/WebApp/Portal-SSO/index.html`
+  - **Sample Sub-App:** `https://rut620-hue.github.io/STB-Argon/WebApp/sample-subapp/index.html`
 
 ## 2. Google Apps Script Microservice (Drive Upload & Email Bridge ✅)
 - **GAS Editor URL:** `https://script.google.com/home/projects/1V-dsBkgFv9zJ-7v5mHP4I73MYVxlomXhG-CXfQooCtMjygJHBsG6pSRA/edit`
@@ -24,4 +27,4 @@
 - **Database Password:** เก็บไว้ใน `.env.local` (`SUPABASE_DB_PASSWORD`)
 
 ## 4. บัญชีผู้ดูแลระบบ (First-Time Setup Mode)
-- ระบบเริ่มต้นในโหมด **First-Time Setup Bypass** (`has_superadmin: false`) เพื่อให้ผู้ดูแลระบบเพิ่มข้อมูลบุคลากรจริงใน `#personnel` แล้วผูกบัญชี `SUPERADMIN` ใน `#users`
+- ระบบเริ่มต้นในโหมด **First-Time Setup Bypass** (`has_superadmin: false`) เพื่อให้ผู้ดูแลระบบเพิ่มข้อมูลบุคลากรจริงใน `#personnel` แล้วผูกบัญชี `SUPERADMIN` ใน `#users` โดยระบบจะทำ Seamless Auto-Login ให้ทันทีหลังสร้างบัญชีแรกสำเร็จ

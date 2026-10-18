@@ -13,11 +13,17 @@
   - [x] รัน Migration เข้า Supabase จริงและทดสอบ RPC สำเร็จ (`is_setup_mode: true`, 13 Settings, 20 Reference Data, 37 Positions)
 - [x] **🔵 เฟส 1B: GAS Microservice + Shared SDK + 3D Loader (`Loader.html`) + ธีมสีเขียว กทม. & ฟอนต์หลัก `Sarabun`** *(เสร็จสมบูรณ์ 100%)*
   - [x] พัฒนาและ Deploy `gas/รหัส.js` & `gas/appsscript.json` (`clasp push` & `clasp deploy @1`)
-  - [x] สร้าง `shared/stb-loader.js`, `shared/stb-sso-guard.js`, `shared/stb-drive-upload.js`
-  - [x] สร้าง `assets/css/portal.css` (ฟอนต์หลัก `Sarabun` จาก Google Fonts + Light/Dark Mode)
+  - [x] สร้าง `WebApp/shared/stb-loader.js`, `WebApp/shared/stb-sso-guard.js`, `WebApp/shared/stb-drive-upload.js`
+  - [x] สร้าง `WebApp/Portal-SSO/assets/css/portal.css` (ฟอนต์หลัก `Sarabun` จาก Google Fonts + Light/Dark Mode)
 - [x] **🟡 เฟส 1C: หน้าเว็บ Central Portal SPA (ส่วนที่ 1: โครงสร้างหลัก, First-Time Setup Bypass, Auth, Dashboard & Profile)** *(เสร็จสมบูรณ์ 100%)*
-  - [x] สร้าง `index.html`, `assets/js/portal-config.js`, `assets/js/portal-api.js`
-  - [x] สร้าง `assets/js/portal-app.js` (ส่วนที่ 1: Login/Setup Bypass, Register 3 ขั้นตอน, Dashboard การ์ดแอป SSO, Profile & วาดลายเซ็น)
-- [ ] **🟣 เฟส 1D: หน้าเว็บ Central Portal SPA (ส่วนที่ 2: ระบบจัดการ Admin/Superadmin & แอปย่อยตัวอย่าง)** *(เฟสถัดไป)*
-  - [ ] เพิ่มโมดูล `#personnel`, `#users`, `#webapps`, `#reference`, `#positions` (Batch Add & เลื่อนลำดับ `▲▼`), `#settings` (พร้อมปุ่ม `รีเซ็ตข้อมูลทดสอบ`)
-  - [ ] สร้าง `apps/sample-subapp/index.html` ทดสอบ SSO ครบวงจร และ Push ขึ้น GitHub Pages
+  - [x] สร้าง `WebApp/Portal-SSO/index.html`, `WebApp/Portal-SSO/assets/js/portal-config.js`, `WebApp/Portal-SSO/assets/js/portal-api.js`
+  - [x] สร้าง `WebApp/Portal-SSO/assets/js/portal-app.js` (Login/Setup Bypass, Register 3 ขั้นตอน, Dashboard การ์ดแอป SSO, Profile & วาดลายเซ็น)
+- [x] **🟣 เฟส 1D: หน้าเว็บ Central Portal SPA (ส่วนที่ 2: ปรับโครงสร้าง `WebApp/` + ระบบจัดการ Admin/Superadmin & แอปย่อยตัวอย่าง)** *(เสร็จสมบูรณ์ 100%)*
+  - [x] ย้ายโครงสร้างโปรเจกต์เข้า `WebApp/` และสร้าง Root Redirector `index.html`
+  - [x] พัฒนา `WebApp/Portal-SSO/assets/js/portal-admin.js` ครบทั้ง 6 โมดูลแอดมิน (`#personnel`, `#users`, `#webapps`, `#reference`, `#positions`, `#settings`)
+  - [x] พัฒนา `WebApp/sample-subapp/index.html` ทดสอบ SSO Handshake 38 ฟิลด์, Master Data และ Drive Upload
+  - [x] แก้ไข Integration Mismatch ข้ามไฟล์ (`stb-loader.js`, `portal-config.js`, `stb-sso-guard.js`) และรัน SQL Patch หมวด B2 บน Supabase จริง
+
+## เฟส 2+: การพัฒนาเว็บแอปพลิเคชันย่อยเฉพาะทาง
+- [ ] วางแผนและออกแบบเว็บแอปย่อยแรกของส่วนตรวจและบังคับการใน `WebApp/<app_name>/`
+- [ ] สร้าง Schema `app_<app_name>` ใน Supabase เพื่อเชื่อมโยงข้อมูลกับระบบแกนกลาง

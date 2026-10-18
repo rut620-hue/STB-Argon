@@ -3,178 +3,55 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ระบบ Central Portal & Single Sign-On (สตบ.สนท.)</title>
-  <link rel="icon" href="https://upload.wikimedia.org/wikipedia/commons/3/35/Patch_of_Bangkok_City_Law_Enforcement_Department.png">
-  <!-- FontAwesome 6 & SweetAlert2 -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <!-- BMA Green Design System & Sarabun Font -->
-  <link rel="stylesheet" href="assets/css/portal.css">
+  <title>กำลังเปลี่ยนเส้นทางไปยัง Central Portal...</title>
+  <meta http-equiv="refresh" content="0; url=WebApp/Portal-SSO/index.html">
+  <script>
+    (function () {
+      var target = 'WebApp/Portal-SSO/index.html' + window.location.search + window.location.hash;
+      window.location.replace(target);
+    })();
+  </script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Sarabun', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      background: #f5f8f6;
+      color: #00351B;
+      text-align: center;
+      padding: 1rem;
+    }
+    .card {
+      background: #ffffff;
+      padding: 2rem 2.5rem;
+      border-radius: 1rem;
+      box-shadow: 0 4px 20px rgba(0, 53, 27, 0.08);
+      max-width: 480px;
+    }
+    a {
+      display: inline-block;
+      margin-top: 1rem;
+      padding: 0.6rem 1.4rem;
+      background: #007B3E;
+      color: #ffffff;
+      text-decoration: none;
+      border-radius: 0.5rem;
+      font-weight: bold;
+    }
+    a:hover { background: #005B2E; }
+  </style>
 </head>
 <body>
-
-  <!-- 1. BMA 3D Logo Flip Splash Screen (#splash) -->
-  <div id="splash">
-    <div class="logo-flip" aria-hidden="true"></div>
-    <div id="spTitle" class="sp-title">ระบบ Central Portal & SSO (สตบ.สนท.)</div>
-    <div id="spSub" class="sp-sub">ส่วนตรวจและบังคับการ สำนักเทศกิจ กรุงเทพมหานคร</div>
-    <div class="sp-bar"></div>
-    <div id="spMsg" class="sp-msg">กำลังเชื่อมต่อฐานข้อมูลและตรวจสอบสิทธิ์...</div>
+  <div class="card">
+    <h2 style="margin-top:0;">ระบบ Central Portal & SSO</h2>
+    <p>กำลังนำท่านเข้าสู่ระบบ กรุณารอสักครู่...</p>
+    <p style="font-size: 0.9rem; color: #64748b;">หากหน้าเว็บไม่เปลี่ยนเส้นทางโดยอัตโนมัติ กรุณากดปุ่มด้านล่าง</p>
+    <a href="WebApp/Portal-SSO/index.html">เข้าสู่หน้าหลัก Central Portal</a>
   </div>
-
-  <!-- 2. Overlay Loader Mask (#ldMask) -->
-  <div id="ldMask" class="ld-mask">
-    <div class="ld-card">
-      <div class="logo-flip" aria-hidden="true"></div>
-      <div id="ldText" class="ld-text">กำลังประมวลผล...</div>
-      <div id="ldSub" class="ld-sub">โปรดรอสักครู่</div>
-      <div class="ld-bar"></div>
-    </div>
-  </div>
-
-  <!-- 3. Login / Register / Forgot Password Split View (#loginView) -->
-  <div id="loginView" class="auth-wrapper" style="display:none;">
-    <div class="auth-card">
-      <!-- Left Brand Panel -->
-      <div class="brand-panel">
-        <div class="deco-circle c1"></div>
-        <div class="deco-circle c2"></div>
-        <div class="deco-circle c3"></div>
-
-        <div>
-          <div class="brand-logo-box">
-            <img id="loginLogoImg" class="brand-logo-img" src="https://upload.wikimedia.org/wikipedia/commons/3/35/Patch_of_Bangkok_City_Law_Enforcement_Department.png" alt="Logo">
-            <div>
-              <div style="font-size:0.8rem;opacity:0.85;font-weight:600;">กรุงเทพมหานคร</div>
-              <div id="loginBrandOrg" style="font-size:1.15rem;font-weight:800;">สำนักเทศกิจ</div>
-            </div>
-          </div>
-
-          <h1 id="loginBrandTitle" style="font-size:1.65rem;font-weight:800;margin:1.85rem 0 0.65rem;line-height:1.3;">
-            ระบบ Central Portal & SSO (สตบ.สนท.)
-          </h1>
-          <p style="font-size:0.94rem;opacity:0.88;margin:0;line-height:1.65;">
-            ศูนย์กลางการยืนยันตัวตน (Single Sign-On) ทะเบียนประวัติบุคลากร และประตูเชื่อมต่อไปยังระบบงานย่อยของหน่วยงานอย่างปลอดภัย
-          </p>
-        </div>
-
-        <div style="z-index:1;font-size:0.82rem;opacity:0.82;border-top:1px solid rgba(255,255,255,0.16);padding-top:1rem;display:flex;justify-content:space-between;align-items:center;">
-          <span><i class="fa-solid fa-shield-halved"></i> Multi-Schema Cloud Portal</span>
-          <button type="button" onclick="PORTAL_APP.openConnectionConfigModal()" style="background:rgba(255,255,255,0.15);border:none;color:#fff;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:0.78rem;">
-            <i class="fa-solid fa-plug"></i> ตั้งค่า API Key
-          </button>
-        </div>
-      </div>
-
-      <!-- Right Dynamic Auth Form Container -->
-      <div id="authPanelBody" class="auth-form-panel"></div>
-    </div>
-  </div>
-
-  <!-- 4. Main Application Shell (#appView) -->
-  <div id="appView" class="app-shell" style="display:none;">
-    <!-- Left Sidebar -->
-    <aside id="sidebar" class="sidebar">
-      <div class="sb-brand">
-        <img id="sbLogoImg" src="https://pr-bangkok.com/wp-content/uploads/2025/06/231116_BMA-Emblem_Edited_Green-600x600.png" alt="Logo">
-        <div style="min-width:0;">
-          <div id="sbAppName" style="font-weight:800;font-size:0.96rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-            Central Portal & SSO
-          </div>
-          <div style="font-size:0.76rem;opacity:0.75;">ส่วนตรวจและบังคับการ สนท.</div>
-        </div>
-      </div>
-
-      <nav id="sbNav" class="sb-nav"></nav>
-
-      <div style="padding:0.9rem;border-top:1px solid rgba(255,255,255,0.12);font-size:0.8rem;opacity:0.85;">
-        <div style="display:flex;align-items:center;justify-content:space-between;">
-          <span id="sbRoleBadge" class="chip" style="background:rgba(255,255,255,0.16);color:#fff;">USER</span>
-          <button type="button" onclick="PORTAL_APP.handleLogout()" class="btn btn-sm" style="background:rgba(229,57,53,0.88);color:#fff;">
-            <i class="fa-solid fa-right-from-bracket"></i> ออกจากระบบ
-          </button>
-        </div>
-      </div>
-    </aside>
-
-    <!-- Right Main Area -->
-    <div class="main-area">
-      <!-- Top Header -->
-      <header class="top-header">
-        <div style="display:flex;align-items:center;gap:0.85rem;">
-          <button type="button" class="btn btn-sm" onclick="document.getElementById('sidebar').classList.toggle('open')" style="background:rgba(255,255,255,0.16);color:#fff;">
-            <i class="fa-solid fa-bars"></i>
-          </button>
-          <div>
-            <div id="hdrPageTitle" style="font-weight:800;font-size:1.12rem;">หน้าหลัก (Dashboard)</div>
-            <div id="hdrPageSub" style="font-size:0.78rem;opacity:0.88;">ศูนย์รวมเว็บแอปพลิเคชันและบริการออนไลน์</div>
-          </div>
-        </div>
-
-        <div style="display:flex;align-items:center;gap:0.75rem;">
-          <button type="button" id="themeBtn" onclick="PORTAL_APP.toggleTheme()" class="btn btn-sm" style="background:rgba(255,255,255,0.16);color:#fff;" title="สลับโหมดสีกลางวัน/กลางคืน">
-            <i class="fa-solid fa-moon"></i>
-          </button>
-
-          <div onclick="PORTAL_APP.navigate('profile')" style="display:flex;align-items:center;gap:0.65rem;cursor:pointer;background:rgba(255,255,255,0.14);padding:0.35rem 0.75rem;border-radius:99px;">
-            <img id="hdrUserAvatar" src="https://pr-bangkok.com/wp-content/uploads/2025/06/231116_BMA-Emblem_Edited_Green-600x600.png" alt="Avatar" style="width:32px;height:32px;border-radius:50%;object-fit:cover;background:#fff;">
-            <div style="line-height:1.25;">
-              <div id="hdrUserName" style="font-weight:700;font-size:0.86rem;">ผู้ใช้งาน</div>
-              <div id="hdrUserPos" style="font-size:0.72rem;opacity:0.85;">ตำแหน่ง</div>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <!-- First-Time Setup Bypass Guide Banner (#setupBanner) -->
-      <div id="setupBanner" class="setup-banner" style="display:none;">
-        <div style="display:flex;align-items:center;gap:0.75rem;">
-          <span style="font-size:1.45rem;">🔓</span>
-          <div>
-            <div style="font-weight:800;">โหมดตั้งค่าระบบครั้งแรก (First-Time Setup Bypass — ยังไม่มีบัญชี SUPERADMIN ในฐานข้อมูล)</div>
-            <div style="font-size:0.85rem;">
-              <b>ขั้นตอนที่ 1:</b> เพิ่มข้อมูลจริงของคุณในเมนู <a href="#personnel" style="font-weight:800;color:inherit;text-decoration:underline;">ทำเนียบบุคลากร (#personnel)</a>
-              &nbsp;➜&nbsp;
-              <b>ขั้นตอนที่ 2:</b> ไปที่เมนู <a href="#users" style="font-weight:800;color:inherit;text-decoration:underline;">จัดการผู้ใช้งาน (#users)</a> เพื่อสร้างบัญชีผูกกับชื่อของคุณและตั้งสิทธิ์เป็น <b>SUPERADMIN</b> (เมื่อบันทึกเสร็จ ระบบจะล็อกโหมด Bypass และเข้าสู่บัญชีของคุณทันที!)
-            </div>
-          </div>
-        </div>
-        <div style="display:flex;gap:0.5rem;">
-          <button type="button" class="btn btn-sm btn-primary" onclick="PORTAL_APP.navigate('personnel')">
-            <i class="fa-solid fa-user-plus"></i> 1. เพิ่มข้อมูลบุคลากร
-          </button>
-          <button type="button" class="btn btn-sm btn-amber" onclick="PORTAL_APP.navigate('users')">
-            <i class="fa-solid fa-user-shield"></i> 2. ผูกบัญชี SUPERADMIN
-          </button>
-        </div>
-      </div>
-
-      <!-- Dynamic Page Content -->
-      <main id="pageBody" class="page-body"></main>
-    </div>
-  </div>
-
-  <!-- 5. Universal Modal (#appModal) -->
-  <div id="appModal" class="modal-backdrop">
-    <div id="appModalBox" class="modal-box">
-      <div class="modal-header">
-        <span id="appModalTitle">หน้าต่างจัดการข้อมูล</span>
-        <button type="button" onclick="PORTAL_APP.closeModal()" style="background:transparent;border:none;color:#fff;font-size:1.2rem;cursor:pointer;">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>
-      <div id="appModalBody" class="modal-body"></div>
-      <div id="appModalFooter" class="modal-footer"></div>
-    </div>
-  </div>
-
-  <!-- Shared & Portal Scripts -->
-  <script src="assets/js/portal-config.js"></script>
-  <script src="shared/stb-loader.js"></script>
-  <script src="shared/stb-drive-upload.js"></script>
-  <script src="shared/stb-sso-guard.js"></script>
-  <script src="assets/js/portal-api.js"></script>
-  <script src="assets/js/portal-app.js"></script>
-  <script src="assets/js/portal-admin.js"></script>
 </body>
 </html>
+

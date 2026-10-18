@@ -25,7 +25,7 @@
   var _supabaseConfig = {
     url: '',
     anonKey: '',
-    portalUrl: '../../index.html'
+    portalUrl: '../Portal-SSO/index.html'
   };
 
   function getConfig_(opts) {
@@ -34,8 +34,8 @@
     return {
       supabaseUrl: opts.supabaseUrl || globalCfg.SUPABASE_URL || 'https://ycyefnsfamlhnwgizavs.supabase.co',
       supabaseAnonKey: opts.supabaseAnonKey || globalCfg.SUPABASE_ANON_KEY || '',
-      portalUrl: opts.portalUrl || globalCfg.PORTAL_BASE_URL || '../../index.html',
-      appId: opts.appId || ''
+      portalUrl: opts.portalUrl || globalCfg.PORTAL_BASE_URL || '../Portal-SSO/index.html',
+      appId: opts.appId || opts.webappId || ''
     };
   }
 
@@ -94,7 +94,7 @@
       try {
         var res = await callPortalRpc('fn_verify_sso_handshake', {
           p_sso_token: ssoToken,
-          p_webapp_id: options.appId || null
+          p_webapp_id: options.appId || options.webappId || null
         }, cfg);
 
         if (!res || !res.success || !res.user) {
@@ -210,7 +210,15 @@
       return _currentUser;
     },
 
+    getUser: function () {
+      return _currentUser;
+    },
+
     get accessLevel() {
+      return _accessLevel;
+    },
+
+    getAccessLevel: function () {
       return _accessLevel;
     },
 
@@ -254,9 +262,14 @@
       if (_appId) sessionStorage.removeItem(SUBAPP_SESSION_PREFIX + _appId);
       var cfg = getConfig_({ portalUrl: portalUrl });
       global.location.href = cfg.portalUrl;
+    },
+
+    logout: function (portalUrl) {
+      return STB_SSO.logoutSubApp(portalUrl);
     }
   };
 
   global.STB_SSO = STB_SSO;
   global.PortalAPI = STB_SSO;
 })(window);
+

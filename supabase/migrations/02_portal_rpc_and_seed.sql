@@ -1902,7 +1902,7 @@ BEGIN
     -- 5.4 Seed เว็บแอปย่อยตัวอย่าง 1 รายการสำหรับทดสอบ SSO Handshake
     IF NOT EXISTS (SELECT 1 FROM portal.webapps LIMIT 1) THEN
         INSERT INTO portal.webapps (webapp_id, name, url, icon_url, status, description, sort_order) VALUES
-            ('APP0001', 'ระบบตัวอย่างทดสอบ SSO (Sample Sub-App)', 'apps/sample-subapp/index.html', 'fa-solid fa-layer-group', 'เปิดใช้งาน', 'เว็บแอปพลิเคชันย่อยตัวอย่างสำหรับทดสอบการส่งต่อสิทธิ์ Single Sign-On (SSO), การดึงข้อมูลบุคลากร และการอัปโหลดไฟล์เข้า Google Drive', 1);
+            ('APP0001', 'ระบบตัวอย่างทดสอบ SSO (Sample Sub-App)', '../sample-subapp/index.html', 'fa-solid fa-layer-group', 'เปิดใช้งาน', 'เว็บแอปพลิเคชันย่อยตัวอย่างสำหรับทดสอบการส่งต่อสิทธิ์ Single Sign-On (SSO), การดึงข้อมูลบุคลากร และการอัปโหลดไฟล์เข้า Google Drive', 1);
     END IF;
 END;
 $$;

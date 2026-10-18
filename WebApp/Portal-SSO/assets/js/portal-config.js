@@ -64,13 +64,35 @@
     set SUPABASE_ANON_KEY(val) {
       setSavedAnonKey(val);
     },
+    setSupabaseAnonKey: function (val) {
+      setSavedAnonKey(val);
+    },
     get GAS_WEBAPP_URL() {
       return getSavedGasUrl();
     },
     set GAS_WEBAPP_URL(val) {
       setSavedGasUrl(val);
     },
-    PORTAL_BASE_URL: global.location.origin + global.location.pathname.replace(/\/apps\/.*$/, '/index.html'),
+    get GAS_BRIDGE_URL() {
+      return getSavedGasUrl();
+    },
+    set GAS_BRIDGE_URL(val) {
+      setSavedGasUrl(val);
+    },
+    setGasBridgeUrl: function (val) {
+      setSavedGasUrl(val);
+    },
+    get PORTAL_BASE_URL() {
+      var loc = global.location;
+      var path = loc.pathname;
+      if (path.indexOf('/WebApp/Portal-SSO/') !== -1) {
+        return loc.origin + path.replace(/\/WebApp\/Portal-SSO\/.*$/, '/WebApp/Portal-SSO/index.html');
+      }
+      if (path.indexOf('/WebApp/') !== -1) {
+        return loc.origin + path.replace(/\/WebApp\/[^/]+\/.*$/, '/WebApp/Portal-SSO/index.html');
+      }
+      return loc.origin + path.replace(/\/[^/]*$/, '/WebApp/Portal-SSO/index.html');
+    },
     DEFAULT_LOGO_BMA: 'https://pr-bangkok.com/wp-content/uploads/2025/06/231116_BMA-Emblem_Edited_Green-600x600.png',
     DEFAULT_LOGO_DEPT: 'https://upload.wikimedia.org/wikipedia/commons/3/35/Patch_of_Bangkok_City_Law_Enforcement_Department.png'
   };

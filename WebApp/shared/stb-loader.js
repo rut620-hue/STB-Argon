@@ -207,23 +207,34 @@
 
     /**
      * โหลด Brand ที่แคชไว้ใน localStorage ขึ้นมาแสดงทันที 0 ms ตอนเปิดหน้าเว็บ
+     * รองรับทั้ง opts แบบ string และแบบ object { title, sub, msg, logoBma, logoDept }
      */
-    brandBoot: function () {
+    brandBoot: function (opts) {
       injectLoaderStyles_();
+      opts = opts || {};
+      if (typeof opts === 'string') {
+        opts = { title: opts };
+      }
       try {
         var cached = JSON.parse(localStorage.getItem(BRAND_STORAGE_KEY) || '{}');
         var root = document.documentElement;
-        if (cached.logoBma) root.style.setProperty('--logo-bma', 'url("' + cached.logoBma + '")');
-        if (cached.logoDept) root.style.setProperty('--logo-dept', 'url("' + cached.logoDept + '")');
-        if (cached.appName) {
-          var spTitle = document.getElementById('spTitle');
-          if (spTitle) spTitle.textContent = cached.appName;
-        }
-        if (cached.orgName) {
-          var spSub = document.getElementById('spSub');
-          if (spSub) spSub.textContent = cached.orgName;
-        }
-        return cached;
+        var logoBma = opts.logoBma || cached.logoBma;
+        var logoDept = opts.logoDept || cached.logoDept;
+        if (logoBma) root.style.setProperty('--logo-bma', 'url("' + logoBma + '")');
+        if (logoDept) root.style.setProperty('--logo-dept', 'url("' + logoDept + '")');
+
+        var appTitle = opts.title || opts.appName || cached.appName;
+        var orgSub = opts.sub || opts.orgName || cached.orgName;
+        var splashMsg = opts.msg || opts.message;
+
+        var spTitle = document.getElementById('spTitle');
+        if (spTitle && appTitle) spTitle.textContent = appTitle;
+        var spSub = document.getElementById('spSub');
+        if (spSub && orgSub) spSub.textContent = orgSub;
+        var spMsg = document.getElementById('spMsg');
+        if (spMsg && splashMsg) spMsg.textContent = splashMsg;
+
+        return Object.assign({}, cached, opts);
       } catch (e) {
         return {};
       }
@@ -303,9 +314,18 @@
 
     /**
      * คืนค่า HTML สำหรับ Page Loader (แสดงกลางพื้นที่เนื้อหา #pageBody)
+     * หรือใส่ลงใน container หากส่ง container มา
      */
-    page: function (text, sub) {
+    page: function (textOrContainer, subOrIsPage, textIfThree) {
       injectLoaderStyles_();
+      if (subOrIsPage === true && textIfThree !== undefined) {
+        var el = typeof textOrContainer === 'string' ? document.getElementById(textOrContainer) : textOrContainer;
+        var html = LOADER.page(textIfThree);
+        if (el) el.innerHTML = html;
+        return html;
+      }
+      var text = textOrContainer;
+      var sub = subOrIsPage;
       return [
         '<div class="ld-page">',
           '<div class="logo-flip" aria-hidden="true"></div>',
@@ -314,6 +334,27 @@
           '<div class="ld-chip"><span class="dot"></span><span>โปรดรอสักครู่</span></div>',
         '</div>'
       ].join('');
+    },
+
+    /**
+     * แสดง Page Loader ลงใน Container ที่ระบุ
+     */
+    showPage: function (container, text) {
+      return LOADER.page(container, true, text);
+    },
+
+    /**
+     * ปิด Splash Boot
+     */
+    hideBoot: function () {
+      LOADER.closeSplash();
+    },
+
+    /**
+     * ตั้งค่า Logo ทางลัด
+     */
+    setLogo: function (url) {
+      LOADER.setBrand({ logoBma: url });
     },
 
     /**
@@ -351,3 +392,4 @@
   global.LOADER = LOADER;
   global.STB_LOADER = LOADER;
 })(window);
+
