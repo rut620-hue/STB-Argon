@@ -1,101 +1,65 @@
-# แผนตรวจสอบสถานะงาน (Audit Checklist) & สถาปัตยกรรมแยกไฟล์แบบ OOP Modular
+# 📋 แผนการตรวจสอบ CRUD ทั้งระบบ (Deep Audit) และแก้ไขปัญหาการลบข้อมูล "โครงสร้างสายงานและระดับตำแหน่ง"
 
 > [!IMPORTANT]
-> แผนฉบับนี้ปรับปรุงตามข้อเสนอแนะของผู้ใช้และซิงค์ตามกฎเหล็ก `.agents/AGENTS.md` (**Dual-Plan Sync Rule**):
-> 1. **ปรับปรุงกฎ `.agents/AGENTS.md` เรียบร้อยแล้ว:** บังคับกฎ **Map-First (ต้องอ่าน `Wiki/Code_Map.md` ก่อนวิเคราะห์ไฟล์ทุกครั้ง ห้ามเริ่มอ่านตั้งแต่บรรทัดแรกแบบสุ่ม)** และบังคับ **IDE Tools Only (`view_file`, `grep_search`, `find_by_name`, `list_dir`, `replace_file_content`, `write_to_file`)** ห้ามใช้ Node.js หรือ Terminal ในการอ่าน/วิเคราะห์/ตัดแบ่งไฟล์
-> 2. **ปรับปรุงข้อ 2.5 (การโหลดข้อมูลและหน้าจอ): เปลี่ยนมาใช้ระบบจาก `Loader.html` แทนทั้งหมด** (`LOADER.page`, `LOADER.into`, `LOADER.show`, `LOADER.hide`, `LOADER.busy`, `skeleton()`, `loadInto()`) ซึ่งเป็น BMA/สำนักเทศกิจ 3D Logo Flip Loader พร้อมแถบวิ่ง `.ld-bar` และ `.ld-chip` ตามต้นฉบับ `ref_122wc/Loader.html` 100%
+> **สถานะแผนงาน:** อัปเดตผลจากการตรวจสอบเจาะลึกทุกบรรทัด (Line-by-Line Surgical Audit) โดย `planner` พบข้อผิดพลาดและจุดที่ Key/Parameter ไม่ตรงกันระหว่าง Frontend, API, Shared SDK และ Database RPC รวมทั้งหมด **10 ประเด็นสำคัญ** รอการตรวจสอบและกดอนุมัติ (**Proceed**) จากผู้ใช้ตามกฎ `.agents/AGENTS.md` (Dual-Plan Sync Rule)
 
 ---
 
-## 📊 ส่วนที่ 1: ตารางตรวจเช็คสถานะงาน (ทำไปแล้ว `✅` vs ยังไม่ได้ทำ `⏳`)
+## 🔍 1. รายงานผลการวิเคราะห์สาเหตุในเมนู "โครงสร้างสายงานและระดับตำแหน่ง" (จุดที่ 1)
 
-### 1.1 ข้อกำหนดที่ 1: Footer Fluid Width + พื้นหลังเทาอ่อน + ดึงชื่อระบบและชื่อหน่วยงานจากฐานข้อมูล
+### 🚨 ประเด็นที่ 1: Primary Key Mismatch (`position_id` vs `pos_id`) ทำการลบ/แก้ไข/เลื่อนลำดับไม่ได้
+* **ไฟล์และพิกัดบรรทัด:**
+  * [admin-positions.js](file:///f:/STB%20System/STB%20System%20n2/STB-Argon/WebApp/Portal-SSO/assets/js/admin/admin-positions.js#L135-L153):
+    * บรรทัด 142–143: `PORTAL_ADMIN.movePosition(\'' + esc(p.position_id) + '\', ...)`
+    * บรรทัด 148: `PORTAL_ADMIN.openSinglePositionModal(\'' + esc(p.position_id) + '\')`
+    * บรรทัด 149: `PORTAL_ADMIN.deletePosition(\'' + esc(p.position_id) + '\', ...)`
+    * บรรทัด 234, 250–251 (`movePosition`), บรรทัด 269, 281 (`openSinglePositionModal`), บรรทัด 316 (`submitSinglePositionModal`)
+  * [02_portal_rpc_and_seed.sql](file:///f:/STB%20System/STB%20System%20n2/STB-Argon/supabase/migrations/02_portal_rpc_and_seed.sql#L281-L284) & บรรทัด 1755–1815:
+    * ตาราง `portal.position_structure` และ RPC `fn_check_system_init` คืนค่าคอลัมน์ชื่อ `pos_id`
+* **สาเหตุ:** หน้าเว็บเรียกใช้ `p.position_id` ซึ่งไม่มีอยู่จริง (มีค่าเป็น `undefined`) เมื่อกดปุ่มลบจึงส่ง字串 `"undefined"` ไปให้ `fn_delete_position_structure(p_session_token, p_pos_id)` ส่งผลให้ SQL รัน `DELETE FROM portal.position_structure WHERE pos_id = 'undefined'` (ลบ 0 แถว แต่ไม่เกิด SQL Error) ระบบจึงขึ้นแจ้งเตือนว่าลบสำเร็จ แต่ข้อมูลยังอยู่ครบทั้งบนหน้าเว็บและฐานข้อมูล! และเมื่อกดแก้ไขก็จะหาข้อมูลเดิมไม่เจอ กลายเป็น INSERT ซ้ำจนติด Unique Error
+* **การแก้ไข:**
+  * เปลี่ยน `p.position_id` เป็น `p.pos_id || p.position_id` ทุกจุดใน `admin-positions.js` และส่งทั้ง `pos_id` และ `position_id` ใน Payload
+  * ใน SQL `fn_save_position_structure` เพิ่ม Fallback: `v_id := trim(COALESCE(p_payload->>'pos_id', p_payload->>'position_id', ''));`
 
-| รายการตามคำสั่ง | สถานะ | พิกัดปัจจุบันในโค้ด (`Wiki/Code_Map.md`) | สิ่งที่ต้องทำเพิ่ม (`⏳`) |
-| :--- | :---: | :--- | :--- |
-| **1.1 Footer Fluid Width (`w-full`)** | `✅ ทำไปแล้ว` | `WebApp/Portal-SSO/index.html` (L161–166): `<footer class="w-full footer-bar px-4 md:px-6 py-4 text-center">` เต็มความกว้างหน้าจอ | — |
-| **1.2 เติมสีพื้นหลังเทาอ่อน** | `✅ ทำไปแล้ว` | `WebApp/Portal-SSO/assets/css/portal.css` (L46): `.footer-bar { background: var(--surface2); border-top: 1px solid var(--border); }` | ปรับเฉดสีพื้นหลัง `.footer-bar` ให้เป็นสีเทาอ่อนที่ชัดเจน (`#F1F5F9` ในโหมดสว่าง และ `#161B22` ในโหมดมืด) |
-| **1.3 ชื่อระบบ (ดึงข้อมูลจาก DB/Settings)** | `✅ ทำไปแล้ว` | `portal-app.js` (`applyBranding`): ดึง `STATE.settings.App_Display_Name || STATE.settings.App_Name` มาใส่ใน `#ftSys` | เชื่อมกับ `LOADER.saveBrand()` และ `LOADER.brandBoot()` ตามแบบ `Loader.html` เพื่อแคชและแสดงชื่อระบบทันทีตั้งแต่เปิดหน้า |
-| **1.4 ชื่อหน่วยงาน (ดึงข้อมูลจาก DB/Settings)** | `⏳ ทำไปบางส่วน` | `portal-app.js` (`applyBranding`): ดึง `Organization_Name` มาใส่ใน `#ftOrg` แต่ปี พ.ศ. ใน `index.html` (L164) ยังพิมพ์ตายตัวว่า `2570` | 1. ดึงชื่อหน่วยงานจาก `STATE.settings` หรือชื่อสำนักจาก `STATE.referenceData` (`BUREAU`) พร้อมแคชผ่าน `LOADER.saveBrand()`<br>2. คำนวณปี พ.ศ. ปัจจุบันแบบ Dynamic (`new Date().getFullYear() + 543`) |
-
----
-
-### 1.2 ข้อกำหนดที่ 2: ฟอนต์ Sarabun, Responsive Mobile Sidebar, Tailwind Modern Minimal Premium, `Loader.html` (Page/Inline/Overlay Loader), Modal/SweetAlert2, Badge, Table Overflow, Chart.js & 12 Theme Colors
-
-| รายการตามคำสั่ง | สถานะ | พิกัดปัจจุบันในโค้ด (`Wiki/Code_Map.md`) | สิ่งที่ต้องทำเพิ่ม (`⏳`) |
-| :--- | :---: | :--- | :--- |
-| **2.1 Font Sarabun Google** | `✅ ทำไปแล้ว` | `index.html` (L9–10) และ `portal.css` (L7–9) โหลด Google Fonts `Sarabun` (300–800) และบังคับใช้ทั้งระบบ | — |
-| **2.2 Responsive Mobile App + เมนูซ้ายมือสไลด์เปิด-ปิด** | `✅ ทำไปแล้ว` | `index.html` (L75–107): เมนูผู้ดูแลระบบและบุคลากรอยู่ด้านซ้ายมือ (`#sidebar`), เมื่อหน้าจอเล็กซ่อน (`-translate-x-full lg:translate-x-0`) มีปุ่มคลิกเปิดเมนูสไลด์ออกมาพร้อม `#overlay` | — |
-| **2.3 Icon สวยงามทันสมัย (Lucide Icons)** | `✅ ทำไปแล้ว` | `index.html` (L16) ใช้ Lucide Icons พร้อมฟังก์ชัน `icons()` รีเฟรชไอคอนทุกครั้งหลังเรนเดอร์ | — |
-| **2.4 UI/UX Tailwind CSS Style Modern มินิมอล Premium** | `✅ ทำไปแล้ว` | ใช้ Tailwind CSS Play CDN ร่วมกับโทเคนดีไซน์ใน `portal.css` (`.card`, `.stat-card`, `.section-bar`, `.pill`, `.seg`) | — |
-| **2.5 การโหลดหน้าจอและพื้นที่เนื้อหาด้วย `Loader.html` (`LOADER.page` / `LOADER.into` / `skeleton()`) + Lazy Loading** | `⏳ ปรับให้ใช้ Loader.html เต็มรูปแบบ` | มี `WebApp/shared/stb-loader.js` แล้ว แต่เวลาสลับหน้าหรือโหลดข้อมูลในพื้นที่เนื้อหา/การ์ดบางจุดยังไม่ได้เรียก `skeleton()` (`LOADER.page`) และ `loadInto(id, text)` (`LOADER.into`) ตามต้นฉบับ `ref_122wc/Loader.html` | 1. อัปเกรด `WebApp/shared/stb-loader.js` และแยก `WebApp/Portal-SSO/views/loader.html` ให้ตรงกับ `ref_122wc/Loader.html` 100% (`LOADER.page`, `LOADER.into`, `LOADER.show`, `LOADER.hide`, `LOADER.text`, `LOADER.busy`, `LOADER.brandBoot`, `LOADER.saveBrand`, `showLoad`, `hideLoad`, `loadText`, `skeleton`, `loadInto`)<br>2. เมื่อสลับหน้าหรือรอโหลดตาราง/กราฟ ให้แสดง `LOADER.page('กำลังโหลดข้อมูล...', 'โปรดรอสักครู่')` และ `LOADER.into(el, 'กำลังโหลด...')` แทนกล่องเทา `.sk` ทั้งหมด + ใส่ `loading="lazy"` ให้รูปภาพ |
-| **2.6 Loading Spin ทุกกระบวนการทำงาน** | `✅ ทำไปแล้ว` *(เชื่อม `LOADER.busy` `⏳`)* | มี Overlay Loader เต็มจอพร้อม Watchdog 60 วินาที | เชื่อมทุกกระบวนการทำงาน (เข้าสู่ระบบ, สมัครสมาชิก, บันทึก Modal, ลบข้อมูล, สลับสถานะ, อัปโหลดไฟล์) ให้ผ่าน `LOADER.show(text)` / `LOADER.busy(promise, text)` ครบ 100% |
-| **2.7 การเพิ่ม (Modal) & การแก้ไข (Modal)** | `✅ ทำไปแล้ว` | ใช้ `#appModal` (`openModal` / `closeModal`) สำหรับการเพิ่มและแก้ไขข้อมูลทุกเมนู | — |
-| **2.8 การลบ (Sweet Confirm) & การแจ้งเตือน (Sweet Alert) & การออกจากระบบ (Sweet Confirm)** | `✅ ทำไปแล้ว` | - การลบ: ใช้ `confirmAction` (`Swal.fire` warning ปุ่มสีแดง `#E53935`)<br>- การแจ้งเตือน: ใช้ `toast()`, `alertSuccess()`, `alertError()`<br>- การออกจากระบบ: `handleLogout()` เรียก `confirmAction('ยืนยันการออกจากระบบ', ...)` | — |
-| **2.9 ตกแต่งด้วย Badge, Table Overflow, `<div><canvas></div>`** | `✅ ทำไปแล้ว` | - Badge: `.badge`, `.chip`, `.soft`<br>- Table Overflow: `<div class="overflow-x-auto">` ครอบตาราง `.tbl` ทุกหน้า<br>- Chart.js: มี `<div><canvas id="chartOrgPersonnel"></canvas></div>` และ `<div><canvas id="chartPosTypes"></canvas></div>` | — |
-| **2.10 Theme Color (`#007B3E`, `#4EBA6F`) & พาเลตต์ 12 สี** | `✅ ทำไปแล้ว` | `portal.css` (L14–37) และ `portal-app.js` (`THEMEC`, `GRADC`) กำหนดสีหลัก `#007B3E`, `#4EBA6F` และพาเลตต์ครบทั้ง 12 สี (`#007B3E`, `#4EBA6F`, `#00838F`, `#8BC34A`, `#FFB300`, `#FF7043`, `#E53935`, `#4A148C`, `#C62828`, `#FB8C00`, `#FDD835`, `#0288D1`) | เพิ่ม CSS Variables สำหรับทั้ง 12 สีใน `portal.css` เพื่อให้เรียกใช้ได้ทั่วทั้งระบบ |
+### 🚨 ประเด็นที่ 2: Cross-Tab State Contamination ระหว่างแท็บคำนำหน้า/สถานะ (`PREFIX`/`STATUS`) ในหน้าตำแหน่ง กับหน้าโครงสร้างสังกัด (`#reference`)
+* **ไฟล์และพิกัดบรรทัด:** [admin-reference.js](file:///f:/STB%20System/STB%20System%20n2/STB-Argon/WebApp/Portal-SSO/assets/js/admin/admin-reference.js#L173-L215) และบรรทัด 511–516
+* **สาเหตุ:** ในเมนู "โครงสร้างสายงานและระดับตำแหน่ง" มีแท็บย่อย `PREFIX` และ `STATUS` ซึ่งเก็บค่าไว้ใน `admState.currentPosTab` เมื่อผู้ใช้คลิกแท็บ `PREFIX` หรือ `STATUS` แล้วสลับไปเมนู "โครงสร้างสังกัด 4 ระดับ (`#reference`)" ค่า `admState.currentPosTab` ยังคงค้างเป็น `PREFIX`/`STATUS` อยู่ ทำให้ฟังก์ชัน `moveReference` และ `deleteReference` เข้าใจผิดว่าผู้ใช้กำลังอยู่ในหน้าตำแหน่ง จึงเลื่อนลำดับไม่ได้และเด้งกลับไปเรนเดอร์หน้าตำแหน่งแทน
+* **การแก้ไข:**
+  * ใน `moveReference(referenceId, direction)`: ค้นหา `targetItem` จาก `referenceId` โดยตรงเพื่อดึง `targetItem.type` และ `targetItem.parent_value` จริง
+  * ตอนรีเรนเดอร์หลังบันทึก/ลบ/เลื่อนลำดับ: เช็คจาก `app.STATE.currentRoute === 'positions'` แทนการเช็ค `admState.currentPosTab`
 
 ---
 
-### 1.3 ข้อกำหนดที่ 3: การแยกไฟล์แบบ OOP Modular (HTML 1 หน้า/ไฟล์ + JS แยกคลาสตามฟังก์ชัน) & ปรับปรุง `Wiki/Code_Map.md`
+## 🔍 2. รายงานผลการตรวจสอบส่วน CRUD ทั้งหมดของระบบ (พบอีก 8 ประเด็นสำคัญ)
 
-| รายการตามคำสั่ง | สถานะปัจจุบัน | ปัญหาที่พบ | แผนการแก้ไข (`⏳`) |
-| :--- | :---: | :--- | :--- |
-| **3.1 แยกหน้าไฟล์ HTML (1 หน้าต่อ 1 ไฟล์)** | `⏳ ยังไม่ได้ทำ` | ปัจจุบัน HTML ของแต่ละหน้าถูกเขียนฝังรวมอยู่ในไฟล์ JS ขนาดใหญ่ | สร้างโฟลเดอร์ `WebApp/Portal-SSO/views/` แยก HTML ออกเป็น **10 ไฟล์ (1 หน้าต่อ 1 ไฟล์ รวม `loader.html`)** โหลดผ่านคลาส `PortalViewLoader` (พร้อม Memory Cache) |
-| **3.2 แยกไฟล์ JS แบบ OOP ตามฟังก์ชันการทำงาน** | `⏳ ยังไม่ได้ทำ` | `portal-app.js` ยาว **1,849 บรรทัด** และ `portal-admin.js` ยาว **2,332 บรรทัด** ทำให้เสีย Token จำนวนมากเวลาอ่าน/วิเคราะห์ | แยกไฟล์ JS ออกเป็นคลาส OOP ตามหน้าที่รับผิดชอบ เหลือไฟล์ละ **~110–430 บรรทัด** โดยคง `window.PORTAL_APP` และ `window.PORTAL_ADMIN` Facade เดิมไว้ 100% |
-| **3.3 ปรับแต่ง `Wiki/Code_Map.md` ให้เข้าถึงข้อมูลรวดเร็ว** | `⏳ ต้องอัปเดตตามไฟล์ใหม่` | พิกัดเดิมชี้ไปที่ไฟล์ใหญ่ 2 ไฟล์ | อัปเดต `Wiki/Code_Map.md` ให้มี **ตารางพิกัดรายฟังก์ชันของทุกไฟล์ย่อย** เพื่อให้อ่าน `Wiki/Code_Map.md` ก่อนแล้วใช้ `view_file` กระโดดไปยังบรรทัดเป้าหมายได้ทันทีโดยไม่ต้องอ่านตั้งแต่บรรทัดแรก |
-
----
-
-## 🏗️ ส่วนที่ 2: สถาปัตยกรรมการแยกไฟล์แบบ OOP (HTML 1 หน้า/ไฟล์ + JS Classes)
-
-### 2.1 โครงสร้างไฟล์ HTML แยกตามหน้า (`WebApp/Portal-SSO/views/` — 1 หน้าต่อ 1 ไฟล์)
-1. `WebApp/Portal-SSO/views/loader.html` — โครงสร้างและสไตล์ของ BMA 3D Logo Flip Loader (`ref_122wc/Loader.html` 100%: `.loader`, `.ld-mask`, `.ld-card`, `.ld-page`, `.ld-inline`, `.ld-bar`, `.ld-chip`)
-2. `WebApp/Portal-SSO/views/auth.html` — หน้าเข้าสู่ระบบ, ลืมรหัสผ่าน, และลงทะเบียนบุคลากรใหม่ 2 ขั้นตอน
-3. `WebApp/Portal-SSO/views/dashboard.html` — หน้าภาพรวมระบบ (4 Stat Cards + SSO WebApp Launchpad + กราฟ `<canvas>` 2 ชุด)
-4. `WebApp/Portal-SSO/views/profile.html` — หน้าข้อมูลส่วนตัวและรหัสผ่าน (ข้อมูลบุคลากร, เปลี่ยน Username 1 ครั้ง, อัปโหลดรูปและลายเซ็น)
-5. `WebApp/Portal-SSO/views/personnel.html` — หน้าทำเนียบบุคลากร (`#personnel`)
-6. `WebApp/Portal-SSO/views/users.html` — หน้าจัดการบัญชีผู้ใช้งานและสิทธิ์รายแอป (`#users`)
-7. `WebApp/Portal-SSO/views/webapps.html` — หน้าจัดการเว็บแอปพลิเคชันย่อย SSO (`#webapps`)
-8. `WebApp/Portal-SSO/views/reference.html` — หน้าโครงสร้างสังกัด 4 ระดับ (`#reference`)
-9. `WebApp/Portal-SSO/views/positions.html` — หน้าโครงสร้างตำแหน่ง & คำนำหน้าชื่อ (`#positions`)
-10. `WebApp/Portal-SSO/views/settings.html` — หน้าตั้งค่าระบบส่วนกลาง (`#settings`)
+| ลำดับ | เมนู / โมดูล | พิกัดไฟล์และบรรทัด | ปัญหาที่ตรวจพบจากการ Audit เชิงลึก | แนวทางแก้ไข |
+| :---: | :--- | :--- | :--- | :--- |
+| **3** | **ตั้งค่าระบบ: รีเซ็ตข้อมูล** (`#settings`) | [admin-settings.js](file:///f:/STB%20System/STB%20System%20n2/STB-Argon/WebApp/Portal-SSO/assets/js/admin/admin-settings.js#L202-L210)<br>[02_portal_rpc_and_seed.sql](file:///f:/STB%20System/STB%20System%20n2/STB-Argon/supabase/migrations/02_portal_rpc_and_seed.sql#L1843-L1897) | **บั๊กวิกฤต:** หน้าเว็บส่งโหมด `MOCK_ONLY` และ `FULL_PURGE` แต่ SQL RPC `fn_reset_test_data` มีแต่ `IF p_mode = 'FULL_FACTORY_RESET' ... ELSE TRUNCATE users, personnel` ทำให้ถ้าเลือก `MOCK_ONLY` จะตกลง `ELSE` และลบข้อมูลจริงทั้งหมด! | เพิ่มบล็อก `IF p_mode = 'MOCK_ONLY'` ใน SQL เพื่อลบเฉพาะแถวทดสอบ (`MOCK_%`) และรองรับ `FULL_PURGE` / `USERS_AND_PERSONNEL` อย่างถูกต้อง |
+| **4** | **ทะเบียนเว็บแอป: เลื่อนลำดับ & สลับสถานะ** (`#webapps`) | [admin-webapps.js](file:///f:/STB%20System/STB%20System%20n2/STB-Argon/WebApp/Portal-SSO/assets/js/admin/admin-webapps.js#L290-L315)<br>[02_portal_rpc_and_seed.sql](file:///f:/STB%20System/STB%20System%20n2/STB-Argon/supabase/migrations/02_portal_rpc_and_seed.sql#L1505-L1508) | `moveWebapp` และ `toggleWebappStatus` ส่งเฉพาะ `webapp_id` กับ `sort_order`/`status` แต่ SQL `fn_save_webapp` เช็ค `name = '' OR url = ''` ไว้นอกบล็อก `IF v_id = ''` ทำให้กดเลื่อนลำดับหรือสลับสถานะแล้วติด Error เสมอ | ย้ายเงื่อนไขเช็ค `name` และ `url` ใน SQL `fn_save_webapp` เข้าไปไว้ในบล็อก `IF v_id = '' THEN` (ตรวจเฉพาะตอนสร้างใหม่) |
+| **5** | **ลงทะเบียนผู้ใช้ใหม่ 3 ขั้นตอน** (`#auth`) | [portal-auth.js](file:///f:/STB%20System/STB%20System%20n2/STB-Argon/WebApp/Portal-SSO/assets/js/modules/portal-auth.js#L305-L405)<br>[portal-api.js](file:///f:/STB%20System/STB%20System%20n2/STB-Argon/WebApp/Portal-SSO/assets/js/portal-api.js#L141-L153)<br>[02_portal_rpc_and_seed.sql](file:///f:/STB%20System/STB%20System%20n2/STB-Argon/supabase/migrations/02_portal_rpc_and_seed.sql#L444-L495) | 1) เรียก `PORTAL_API.checkIdCardPersonnel` และ `PORTAL_API.register` แต่ใน `portal-api.js` ชื่อ `checkIdCardForRegister` และ `registerUser`<br>2) หน้าเว็บเช็ค `res.found` แต่ SQL คืน `res.exists`<br>3) หน้าเว็บส่ง `id_card` แต่ SQL รับ `id_card_number` | 1) เพิ่ม Alias ใน `portal-api.js`<br>2) เช็ค `res.exists \|\| res.found` และส่งทั้ง `id_card` & `id_card_number`<br>3) SQL รับ `COALESCE(p_payload->>'id_card_number', p_payload->>'id_card')` |
+| **6** | **โปรไฟล์ส่วนตัว: เลขบัตร ปชช.** (`#profile`) | [portal-profile.js](file:///f:/STB%20System/STB%20System%20n2/STB-Argon/WebApp/Portal-SSO/assets/js/modules/portal-profile.js#L79)<br>[02_portal_rpc_and_seed.sql](file:///f:/STB%20System/STB%20System%20n2/STB-Argon/supabase/migrations/02_portal_rpc_and_seed.sql#L145-L168) | หน้าเว็บอ่าน `u.Id_Card \|\| u.id_card_number \|\| u.idCardNumber` แต่ SQL `fn_build_user_payload` ส่งคีย์ `ID_Card_Number` ทำให้เลขบัตรแสดงเป็น `-` | แก้ `portal-profile.js` ให้เช็ค `u.ID_Card_Number` ด้วย และเพิ่ม `'idCardNumber'` ใน SQL `fn_build_user_payload` |
+| **7** | **อัปโหลดไฟล์ Google Drive ทุกหน้า** (`stb-drive-upload.js`) | [stb-drive-upload.js](file:///f:/STB%20System/STB%20System%20n2/STB-Argon/WebApp/shared/stb-drive-upload.js#L153-L165)<br>`admin-personnel.js`, `admin-webapps.js`, `portal-profile.js` | ทุกหน้าเรียก `uploadToDrive(fileOrDataUrl, { folderId, fileName })` (2 arguments) แต่ `uploadToDrive(opts)` ใน SDK รับแค่ 1 argument ทำให้ `folderId` และไฟล์หลุดหาย | ปรับ `uploadToDrive(arg1, arg2)` ใน `stb-drive-upload.js` ให้รองรับทั้งการเรียกแบบ 1 argument `(opts)` และ 2 arguments `(fileOrDataUrl, opts)` |
+| **8** | **ทดสอบโฟลเดอร์ Drive** (`#settings`) | [admin-settings.js](file:///f:/STB%20System/STB%20System%20n2/STB-Argon/WebApp/Portal-SSO/assets/js/admin/admin-settings.js#L125-L136)<br>[stb-drive-upload.js](file:///f:/STB%20System/STB%20System%20n2/STB-Argon/WebApp/shared/stb-drive-upload.js#L210-L215) | `admin-settings.js` เรียก `STB_DRIVE.testFolderAccess(val)` และเช็ค `res.ok` แต่ใน `stb-drive-upload.js` ชื่อ `checkDriveFolder` และคืน `res.success` | เพิ่ม Alias `testFolderAccess: checkDriveFolder` ใน `stb-drive-upload.js` และเช็ค `res.success \|\| res.ok` ใน `admin-settings.js` |
+| **9** | **โฟลเดอร์เก็บรูปบุคลากรและไอคอนแอป** (`#webapps`, `#personnel`) | [admin-webapps.js](file:///f:/STB%20System/STB%20System%20n2/STB-Argon/WebApp/Portal-SSO/assets/js/admin/admin-webapps.js#L207)<br>[admin-personnel.js](file:///f:/STB%20System/STB%20System%20n2/STB-Argon/WebApp/Portal-SSO/assets/js/admin/admin-personnel.js#L330) | ทั้ง 2 โมดูลไปดึง `Profile_Folder_ID` แทนที่จะใช้ `App_Icon_Folder_ID` และ `Personnel_Photo_Folder_ID` ที่ตั้งค่าไว้ใน Settings | แก้ให้ดึง `App_Icon_Folder_ID` (สำหรับ Webapps) และ `Personnel_Photo_Folder_ID` (สำหรับ Personnel) โดยมี `Profile_Folder_ID` เป็น Fallback |
+| **10** | **ชื่อบุคลากรในตารางบัญชีผู้ใช้** (`#users`) | [admin-users.js](file:///f:/STB%20System/STB%20System%20n2/STB-Argon/WebApp/Portal-SSO/assets/js/admin/admin-users.js#L70-L116)<br>[02_portal_rpc_and_seed.sql](file:///f:/STB%20System/STB%20System%20n2/STB-Argon/supabase/migrations/02_portal_rpc_and_seed.sql#L1261) | `admin-users.js` แสดงผลและค้นหาด้วย `u.personnel_name` แต่ SQL `fn_list_users` ส่งคีย์ชื่อ `u.full_name` ทำให้ชื่อเจ้าของบัญชีแสดงเป็น `-` | แก้ใน `admin-users.js` บรรทัด 70 และ 116 ให้ใช้ `u.full_name \|\| u.personnel_name` |
 
 ---
 
-### 2.2 โครงสร้างการแยกไฟล์ JS แบบ OOP จัดกลุ่มตามฟังก์ชันการทำงาน (`WebApp/Portal-SSO/assets/js/`)
+## 🛠️ 3. ลำดับขั้นตอนการผ่าตัดแก้ไข (Surgical Execution Steps)
 
-> [!TIP]
-> **พิกัดต้นทางจาก `Wiki/Code_Map.md` สำหรับการแยกไฟล์ด้วย IDE Tools (ไม่ต้องอ่านตั้งแต่บรรทัดแรก):**
-> - **จาก `portal-app.js` (1,849 บรรทัด):**
->   - `L1–117`: State, Theme Colors (`THEMEC`, `GRADC`), UI Atoms (`icons`, `esc`, `statCard`, `sectionBar`, `th`, `resolveDriveImg`) $\rightarrow$ แยกไป `assets/js/core/portal-state.js`
->   - `L118–340`: Dynamic Structure & Deduplication Engine (`getReferenceItems`, `getPositionTypes`, `getPositionsByType`, `getLevelsByPosition`, `buildOptionsHtml`, `bindOrgAndPositionCascade`) $\rightarrow$ แยกไป `assets/js/core/portal-cascade.js`
->   - `L341–560`: Theme, Branding (`applyBranding` + Footer Dynamic + `LOADER.saveBrand`), Modal & SweetAlert2 + `LOADER.page` / `LOADER.into` Wrapper $\rightarrow$ แยกไป `assets/js/core/portal-ui.js` และ `assets/js/core/portal-view-loader.js`
->   - `L561–1160`: Auth Views (Login, Register 2 Steps, Forgot/Reset Password, Verify Email, `handleLogout` Sweet Confirm) $\rightarrow$ แยกไป `assets/js/modules/portal-auth.js`
->   - `L1161–1400`: Dashboard View (4 Stat Cards, SSO Launchpad, Chart.js 2 กราฟ, `launchSubApp`) $\rightarrow$ แยกไป `assets/js/modules/portal-dashboard.js`
->   - `L1401–1760`: Profile View (Masked ID Card, 1-Time Username Edit, Drive Photo/Signature Upload, Canvas Signature Pad) $\rightarrow$ แยกไป `assets/js/modules/portal-profile.js`
->   - `L1761–1849`: Main Router & Public Facade (`window.PORTAL_APP`) $\rightarrow$ คงไว้ใน `assets/js/portal-app.js`
-> - **จาก `portal-admin.js` (2,332 บรรทัด):**
->   - `L1–110`: Admin Shared State & Helpers $\rightarrow$ แยกไป `assets/js/admin/admin-shared.js`
->   - `L111–560`: `#personnel` (`AdminPersonnel`) $\rightarrow$ แยกไป `assets/js/admin/admin-personnel.js`
->   - `L561–980`: `#users` (`AdminUsers`) $\rightarrow$ แยกไป `assets/js/admin/admin-users.js`
->   - `L981–1390`: `#webapps` (`AdminWebapps`) $\rightarrow$ แยกไป `assets/js/admin/admin-webapps.js`
->   - `L1391–1728`: `#reference` (`AdminReference`) $\rightarrow$ แยกไป `assets/js/admin/admin-reference.js`
->   - `L1729–2141`: `#positions` (`AdminPositions`) $\rightarrow$ แยกไป `assets/js/admin/admin-positions.js`
->   - `L2142–2290`: `#settings` (`AdminSettings`) $\rightarrow$ แยกไป `assets/js/admin/admin-settings.js`
->   - `L2291–2332`: Admin Route Registration & Public Facade (`window.PORTAL_ADMIN`) $\rightarrow$ คงไว้ใน `assets/js/portal-admin.js`
+เมื่อผู้ใช้กด **Proceed** จะสั่งการให้ Subagents ดำเนินการตามลำดับดังนี้:
 
----
-
-## 🛠️ ส่วนที่ 3: ขั้นตอนการดำเนินงานและกฎเหล็กการตรวจสอบ
-
-1. **บังคับใช้กฎ Map-First & IDE Tools 100%:**
-   - ทุก Subagent อ่านพิกัดจาก `Wiki/Code_Map.md` และตารางพิกัดในแผนนี้ก่อนใช้ `view_file` เสมอ (ห้ามเริ่มอ่านตั้งแต่บรรทัดที่ 1 เพื่อสแกนหาเอง และห้ามใช้ Node.js หรือ Terminal อ่าน/ตัดแบ่งไฟล์)
-2. **อัปเกรด `WebApp/shared/stb-loader.js` & `views/loader.html` ให้ตรงกับ `Loader.html` 100%:**
-   - รองรับ `LOADER.show`, `LOADER.hide`, `LOADER.text`, `LOADER.forceHide`, `LOADER.page`, `LOADER.into`, `LOADER.busy`, `LOADER.brandBoot`, `LOADER.saveBrand`, `LOADER.closeSplash` และฟังก์ชันกลาง `showLoad`, `hideLoad`, `loadText`, `skeleton()`, `loadInto()`
-3. **แยกไฟล์ HTML Views (10 ไฟล์) และ JS OOP Classes (16 ไฟล์) + ปรับปรุง Footer Fluid Width:**
-   - แยกไฟล์ตามพิกัดบรรทัดข้างต้นโดยไม่แก้ไขหรือตัดทอนตรรกะการทำงานเดิม
-4. **การตรวจสอบความถูกต้องหลังแยกไฟล์โดย Subagent (`inherit` / Argon):**
-   - ให้ Subagent (`Model: "inherit"`) ตรวจสอบยืนยันว่าทุกเมธอดใน `window.PORTAL_APP` และ `window.PORTAL_ADMIN` รวมถึงการทำงานทุกหน้าอยู่ครบถ้วน 100% ไม่มีการเปลี่ยนแปลงฟังก์ชันหรือตรรกะเดิม
-5. **อัปเดต `Wiki/Code_Map.md` และ `Working/CURRENT_STATE.md` (`archivist`):**
-   - บันทึกตารางพิกัดบรรทัดของไฟล์ย่อยทั้งหมดลงใน `Wiki/Code_Map.md` เพื่อให้การแก้ไขในอนาคตเปิดอ่านเฉพาะไฟล์ย่อยได้ทันที
+1. **ส่วนฐานข้อมูล Supabase (`supabase/migrations/02_portal_rpc_and_seed.sql` & รันอัปเดต RPC บน Supabase `ycyefnsfamlhnwgizavs`):**
+   * อัปเดตฟังก์ชัน `portal.fn_build_user_payload` (เพิ่ม `'idCardNumber'`)
+   * อัปเดตฟังก์ชัน `portal.fn_register_user` (รองรับทั้ง `id_card_number` และ `id_card`)
+   * อัปเดตฟังก์ชัน `portal.fn_save_webapp` (ตรวจ `name`/`url` เฉพาะตอนสร้างใหม่ `v_id = ''`)
+   * อัปเดตฟังก์ชัน `portal.fn_save_position_structure` (รองรับทั้ง `pos_id` และ `position_id`)
+   * อัปเดตฟังก์ชัน `portal.fn_reset_test_data` (แยกโหมด `MOCK_ONLY`, `FULL_PURGE`/`USERS_AND_PERSONNEL`, และ `FULL_FACTORY_RESET` อย่างปลอดภัย)
+2. **ส่วน Shared SDK & API (`WebApp/shared/stb-drive-upload.js`, `WebApp/Portal-SSO/assets/js/portal-api.js`):**
+   * ปรับ `uploadToDrive` ให้รับได้ทั้ง 1 และ 2 arguments + เพิ่ม `testFolderAccess`
+   * เพิ่ม Alias `checkIdCardPersonnel`, `register`, และปรับ `savePositionStructure` / `deletePositionStructure` ใน `portal-api.js`
+3. **ส่วน Frontend Modules (`admin-positions.js`, `admin-reference.js`, `admin-webapps.js`, `admin-personnel.js`, `admin-users.js`, `admin-settings.js`, `portal-auth.js`, `portal-profile.js`):**
+   * แก้ไขเฉพาะบรรทัดที่มีปัญหาตามตารางทั้ง 10 ประเด็นด้วย `replace_file_content`
+4. **ส่วน QA & Verification (`reviewer`) และ Knowledge Update (`archivist`):**
+   * `reviewer` ตรวจ `git diff`, เช็ค Syntax `node -c` ทุกไฟล์ และรัน SQL migration อัปเดต RPC บนฐานข้อมูลจริง
+   * `archivist` อัปเดตพิกัดบรรทัดใน `Wiki/Code_Map.md`, `Working/CURRENT_STATE.md` และสำรองข้อมูลขึ้น GitHub
